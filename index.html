@@ -38,11 +38,13 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #act:hover{background:#EF9F27;}
 #act:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #act[hidden]{display:none;}
-#reset{position:absolute;top:12px;right:12px;z-index:2;font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+#topbtns{position:absolute;top:12px;right:12px;z-index:2;display:flex;gap:8px;}
+.topbtn{font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
   padding:8px 14px;background:var(--panel);color:var(--ink);border:2px solid var(--edge);border-radius:10px;cursor:pointer;}
+.topbtn:hover{border-color:#185FA5;}
 #reset:hover{border-color:#A32D2D;}
 #reset.confirm{background:#F7C1C1;color:#501313;border-color:#A32D2D;}
-#reset:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+.topbtn:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #over{z-index:1;}
 #act2{position:absolute;left:50%;bottom:78px;transform:translateX(-50%);font:600 17px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
   padding:12px 22px;background:#F7C1C1;color:#501313;border:2px solid #A32D2D;border-radius:10px;cursor:pointer;white-space:nowrap;}
@@ -83,6 +85,29 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
   padding:12px 18px;background:#FAEEDA;color:#633806;border:2px solid #854F0B;border-radius:10px;cursor:pointer;}
 #swing:hover{background:#FAC775;}
 #swing:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#swing[hidden],#zone[hidden],#hpWrap[hidden]{display:none;}
+#modes{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(20,20,18,.65);padding:16px;box-sizing:border-box;}
+#modes[hidden]{display:none;}
+#modes .card{background:var(--panel);color:var(--ink);border:2px solid var(--edge);border-radius:14px;padding:20px 22px;max-width:540px;width:100%;box-sizing:border-box;max-height:100%;overflow:auto;}
+#modes h2{margin:0 0 2px;font-size:28px;font-weight:600;}
+#modes .sub{margin:0 0 14px;font-size:16px;color:var(--ink2);}
+#modes .mgrid{display:grid;grid-template-columns:1fr 1fr;gap:10px;}
+#modes .mgrid button{font:inherit;text-align:left;padding:12px 14px;border-radius:10px;cursor:pointer;background:#FAC775;color:#412402;border:2px solid #854F0B;display:flex;flex-direction:column;gap:2px;}
+#modes .mgrid button b{font-size:18px;font-weight:600;}
+#modes .mgrid button span{font-size:13px;}
+#modes .mgrid button:hover{background:#EF9F27;}
+#modes button:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#modes table{width:100%;border-collapse:collapse;margin:14px 0 6px;font-size:14px;}
+#modes th,#modes td{text-align:left;padding:5px 6px;border-bottom:1px solid var(--edge);}
+#modes th{font-weight:600;color:var(--ink2);}
+#modes .dot{display:inline-block;width:10px;height:10px;border-radius:50%;margin-right:6px;vertical-align:middle;}
+#modes .note{margin:6px 0 0;font-size:13px;color:var(--ink2);line-height:1.4;}
+#modesCancel{margin-top:12px;width:100%;font:inherit;padding:9px;border-radius:8px;background:transparent;color:var(--ink);border:2px solid var(--edge);cursor:pointer;}
+#modesCancel[hidden]{display:none;}
+#hint[hidden]{display:none;}
+.multi #act2{bottom:auto;top:12px;}
+.multi #act3{bottom:auto;top:70px;}
+.multi #bmenu,.multi #smenu{bottom:auto;top:128px;}
 </style>
 </head>
 <body>
@@ -92,11 +117,11 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <h1>Village Defense</h1>
     <p id="hint">Move with WASD or the arrow keys.</p>
     <p id="zone">Inside the village</p>
-    <p id="stats"><span>Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="weapon">Weapon: Wooden sword</span></p>
+    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="weapon">Weapon: Wooden sword</span></p>
     <p id="threat" aria-live="polite"></p>
     <p id="msg" aria-live="polite"></p>
   </div>
-  <button id="reset" type="button">Reset game</button>
+  <div id="topbtns"><button id="playersBtn" class="topbtn" type="button">Players</button><button id="reset" class="topbtn" type="button">Reset game</button></div>
   <button id="act" type="button" hidden></button>
   <button id="act2" type="button" hidden></button>
   <button id="act3" type="button" hidden></button>
@@ -119,6 +144,25 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <button type="button" class="cancel">Cancel</button>
   </div>
   <button id="swing" type="button">Swing sword</button>
+  <div id="modes" role="dialog" aria-label="Choose how many players"><div class="card">
+    <h2>Village Defense</h2>
+    <p class="sub">How many players?</p>
+    <div class="mgrid">
+      <button type="button" data-n="1"><b>1 player</b><span>Arrow keys</span></button>
+      <button type="button" data-n="2"><b>2 players</b><span>Arrow keys and WASD</span></button>
+      <button type="button" data-n="3"><b>3 players</b><span>Arrows, WASD and YGHJ</span></button>
+      <button type="button" data-n="4"><b>4 players</b><span>Arrows, WASD, YGHJ and FCVB</span></button>
+    </div>
+    <table>
+      <tr><th>Player</th><th>Move</th><th>Swing</th><th>Use</th></tr>
+      <tr><td><span class="dot" style="background:#185FA5"></span>P1</td><td>Arrow keys</td><td>Enter</td><td>Right Shift</td></tr>
+      <tr><td><span class="dot" style="background:#A32D2D"></span>P2</td><td>W A S D</td><td>Q</td><td>E</td></tr>
+      <tr><td><span class="dot" style="background:#534AB7"></span>P3</td><td>Y G H J</td><td>T</td><td>U</td></tr>
+      <tr><td><span class="dot" style="background:#0F6E56"></span>P4</td><td>F C V B</td><td>X</td><td>N</td></tr>
+    </table>
+    <p class="note">1 player: arrow keys or WASD to move, Enter or F to swing, Right Shift or E to use. With 2 to 4 players the screen splits and everyone shares coins, walls and swords. Open the shop's bridge and sword menus with the on-screen buttons. Press 1 to 4 to pick.</p>
+    <button type="button" id="modesCancel" hidden>Back to game</button>
+  </div></div>
   <div id="over" hidden><div><h2 id="overT">You were defeated</h2><p id="overP">The zombie got you. Your coins and walls are kept.</p><button id="retry" type="button">Try again</button></div></div>
 </div>
 <script>
@@ -201,10 +245,27 @@ for(let i=0;i<1050;i++){
   if(!inMoat(x,y,12)) flowers.push({x,y,c:rand()<.5?'#FBEAF0':'#FAC775'});
 }
 
-const player = {x:START.x, y:START.y, r:14, speed:230, fx:0, fy:1, moving:false, t:0, swing:0};
-const SWING_T=0.25;
-
-let scene='world', fade=0, fadeDir=0, pending=null;
+const SWING_T=0.25, RESPAWN_T=8;
+const PCOLORS=[
+  {name:'P1', body:'#185FA5', dark:'#042C53'},
+  {name:'P2', body:'#A32D2D', dark:'#501313'},
+  {name:'P3', body:'#534AB7', dark:'#26215C'},
+  {name:'P4', body:'#0F6E56', dark:'#04342C'}];
+const BINDS=[
+  {u:['ArrowUp'],d:['ArrowDown'],l:['ArrowLeft'],r:['ArrowRight'],atk:['Enter','NumpadEnter'],use:['ShiftRight'],txt:'Arrows move, Enter swing, Right Shift use'},
+  {u:['KeyW'],d:['KeyS'],l:['KeyA'],r:['KeyD'],atk:['KeyQ'],use:['KeyE'],txt:'WASD move, Q swing, E use'},
+  {u:['KeyY'],d:['KeyH'],l:['KeyG'],r:['KeyJ'],atk:['KeyT'],use:['KeyU'],txt:'YGHJ move, T swing, U use'},
+  {u:['KeyF'],d:['KeyV'],l:['KeyC'],r:['KeyB'],atk:['KeyX'],use:['KeyN'],txt:'FCVB move, X swing, N use'}];
+const SOLO_BIND={u:['ArrowUp','KeyW'],d:['ArrowDown','KeyS'],l:['ArrowLeft','KeyA'],r:['ArrowRight','KeyD']};
+const START_OFF=[[0,0],[-60,0],[-120,0],[-180,0]];
+let numPlayers=1, players=[], viewer=null, roomPlayers=[];
+function makePlayer(i){
+  return {i, col:PCOLORS[i], x:START.x+START_OFF[i][0], y:START.y+START_OFF[i][1], r:14, speed:230, fx:0, fy:1, moving:false, t:0,
+    swing:0, swingId:0, hp:MAX_HP, hurtCD:0, inv:0, down:0, scene:'world', fade:0, fadeDir:0, pending:null, camX:0, camY:0,
+    view:{x:0,y:0,w:100,h:100}, action:null};
+}
+function pname(p){ return numPlayers===1?'you':p.col.name; }
+function keyName(c){ return c==='ShiftRight'?'Right Shift':c.replace('Key',''); }
 const DOOR_W=60, IT=24;
 const interiors={
   house:{name:'In the house', w:640, h:440, floor:'#C9A06A', plank:'#B0874F', wall:'#854F0B', wallDark:'#633806', bld:rects[2],
@@ -235,7 +296,7 @@ function circleRect(cx,cy,r,R){
   return (cx-nx)**2+(cy-ny)**2 < r*r;
 }
 function blockedWorld(x,y,r,swim){
-  r=r||player.r;
+  r=r||14;
   if(x<r||y<r||x>W-r||y>H-r) return true;
   for(const R of rects) if(circleRect(x,y,r,R)) return true;
   if((core.x-x)**2+(core.y-y)**2 < (core.r+r)**2) return true;
@@ -249,7 +310,7 @@ function blockedWorld(x,y,r,swim){
 }
 
 function blockedRoom(x,y,room){
-  const r=player.r;
+  const r=14;
   if(x<IT+r||x>room.w-IT-r||y<IT+r) return true;
   if(y>room.h-IT-r && Math.abs(x-room.w/2)>DOOR_W/2-r) return true;
   if(y>room.h+r) return true;
@@ -257,23 +318,24 @@ function blockedRoom(x,y,room){
   if(room.npc && (room.npc.x-x)**2+(room.npc.y-y)**2 < (r+room.npc.r)**2) return true;
   return false;
 }
-function blocked(x,y){ return scene==='world' ? blockedWorld(x,y) : blockedRoom(x,y,interiors[scene]); }
-function go(target){ if(fadeDir) return; pending=target; fadeDir=1; }
-function applyScene(){
-  if(pending==='world'){
-    const R=interiors[scene].bld;
-    player.x=R.x+R.w/2; player.y=R.y+R.h+player.r+24; player.fx=0; player.fy=1;
+function blocked(p,x,y){ return p.scene==='world' ? blockedWorld(x,y) : blockedRoom(x,y,interiors[p.scene]); }
+function go(p,target){ if(p.fadeDir) return; p.pending=target; p.fadeDir=1; }
+function applyScene(p){
+  if(p.pending==='world'){
+    const R=interiors[p.scene].bld;
+    p.x=R.x+R.w/2; p.y=R.y+R.h+p.r+24; p.fx=0; p.fy=1;
   } else {
-    const room=interiors[pending];
-    player.x=room.w/2; player.y=room.h-IT-player.r-12; player.fx=0; player.fy=-1;
+    const room=interiors[p.pending];
+    p.x=room.w/2; p.y=room.h-IT-p.r-12; p.fx=0; p.fy=-1;
   }
-  scene=pending; pending=null;
-  const [tx,ty]=camTarget(); camX=tx; camY=ty;
+  p.scene=p.pending; p.pending=null;
+  const [tx,ty]=camTarget(p); p.camX=tx; p.camY=ty;
 }
-function camTarget(){
-  const ww=scene==='world'?W:interiors[scene].w, hh=scene==='world'?H:interiors[scene].h;
-  const tx = ww<=vw ? (ww-vw)/2 : Math.max(0,Math.min(ww-vw,player.x-vw/2));
-  const ty = hh<=vh ? (hh-vh)/2 : Math.max(0,Math.min(hh-vh,player.y-vh/2));
+function camTarget(p){
+  const vw=p.view.w, vh=p.view.h;
+  const ww=p.scene==='world'?W:interiors[p.scene].w, hh=p.scene==='world'?H:interiors[p.scene].h;
+  const tx = ww<=vw ? (ww-vw)/2 : Math.max(0,Math.min(ww-vw,p.x-vw/2));
+  const ty = hh<=vh ? (hh-vh)/2 : Math.max(0,Math.min(hh-vh,p.y-vh/2));
   return [tx,ty];
 }
 
@@ -334,7 +396,8 @@ function placeWall(sl){
   sl.built=true; wallInv--;
   const R={x:sl.x,y:sl.y,w:sl.w,h:sl.h,kind:'wall'};
   rects.push(R);
-  if(blockedWorld(player.x,player.y)){
+  for(const player of players){
+    if(player.scene!=='world' || !blockedWorld(player.x,player.y)) continue;
     const d={west:[1,0],east:[-1,0],south:[0,-1]}[sl.side];
     for(let k=1;k<120;k++){
       if(!blockedWorld(player.x+d[0]*k,player.y+d[1]*k)){ player.x+=d[0]*k; player.y+=d[1]*k; break; }
@@ -380,25 +443,26 @@ smenu.addEventListener('click',e=>{
   const t=e.target.closest('button'); if(!t) return;
   if(t.dataset.w) buySword(t.dataset.w); else closeSwordMenu();
 });
-function computeAction3(){
-  if(fadeDir||scene!=='shop'||weapon==='iron') return null;
+function shopPlayer(){
   const n=interiors.shop.npc;
-  if(Math.hypot(player.x-n.x,player.y-n.y)<170) return {label:'Buy a better sword', run:openSwordMenu};
-  return null;
+  return players.find(p=>!p.down&&!p.fadeDir&&p.scene==='shop'&&Math.hypot(p.x-n.x,p.y-n.y)<170);
+}
+function computeAction3(){
+  if(weapon==='iron'||!shopPlayer()) return null;
+  return {label:'Buy a better sword', run:openSwordMenu};
 }
 function computeAction2(){
-  if(fadeDir||scene!=='shop'||!bridges.some(b=>b.intact)) return null;
-  const n=interiors.shop.npc;
-  if(Math.hypot(player.x-n.x,player.y-n.y)<170) return {label:'Destroy a bridge for 100 coins', run:openBridgeMenu};
-  return null;
+  if(!bridges.some(b=>b.intact)||!shopPlayer()) return null;
+  return {label:'Destroy a bridge for 100 coins', run:openBridgeMenu};
 }
 function skipToWave(n){
   zombies=[]; arrows=[]; spawnQueue=[];
   wave=n-1; waveLive=false; allDone=false; waveTimer=WAVE_DELAY;
   showMsg('Skipped to wave '+n+'. It arrives in '+WAVE_DELAY+'s.');
 }
-function computeAction(){
-  if(fadeDir) return null;
+function computeActionFor(player){
+  if(player.fadeDir||player.down) return null;
+  const scene=player.scene;
   if(scene==='world' && Math.hypot(player.x-SKIP_BTN.x,player.y-SKIP_BTN.y)<SKIP_BTN.r+40)
     return {label:'Press the red button (skip to wave '+SKIP_BTN.wave+')', run:()=>{ SKIP_BTN.pressT=0.3; skipToWave(SKIP_BTN.wave); }};
   if(scene==='shop'){
@@ -416,14 +480,15 @@ let lastBtn='', lastBtn2='', lastBtn3='', lastWeapon='', lastStats='', action3=n
 let lastHp=-1, lastThreat='', lastCore=-1;
 const coreEl=document.getElementById('core');
 function syncUI(){
-  if(hp!==lastHp){ hpEl.innerHTML='&#9829;'.repeat(Math.max(0,hp))+'<span style="opacity:.3">'+'&#9829;'.repeat(MAX_HP-Math.max(0,hp))+'</span>'; lastHp=hp; }
+  const hp=players[0]?players[0].hp:0;
+  if(numPlayers===1 && hp!==lastHp){ hpEl.innerHTML='&#9829;'.repeat(Math.max(0,hp))+'<span style="opacity:.3">'+'&#9829;'.repeat(MAX_HP-Math.max(0,hp))+'</span>'; lastHp=hp; }
   let th='';
   if(allDone) th='All '+WAVES.length+' waves cleared!';
   else if(waveLive && zombies.length+spawnQueue.length>0){
     const n=zombies.length+spawnQueue.length;
     th='Wave '+wave+' of '+WAVES.length+': '+n+' '+nounOf(WAVES[wave-1].level,n)+' left';
-    if(spawnQueue.length&&scene!=='world') th+=', waiting outside';
-    else if(scene==='world'&&zombies.some(q=>q.aggro||q.shooting==='player')) th+=', one is attacking you!';
+    if(spawnQueue.length&&!players.some(p=>p.scene==='world')) th+=', waiting outside';
+    else if(zombies.some(q=>q.aggro||q.shooting==='player')) th+=numPlayers===1?', one is attacking you!':', a player is under attack!';
     else if(zombies.some(q=>q.reached||q.shooting==='core')) th+=', the core is under attack!';
   }
   else th='Wave '+(wave+1)+' of '+WAVES.length+' arrives in '+Math.max(1,Math.ceil(waveTimer))+'s';
@@ -431,12 +496,12 @@ function syncUI(){
   if(core.hp!==lastCore){ coreEl.textContent='Core: '+core.hp+'/'+core.maxHp; lastCore=core.hp; }
   const st=coins+'|'+wallInv;
   if(st!==lastStats){ coinsEl.textContent='Coins: '+coins; wallsEl.textContent='Walls: '+wallInv; lastStats=st; }
-  const lbl=action ? action.label+(touch?'':' (E)') : '';
-  if(lbl!==lastBtn){ actBtn.textContent=lbl; actBtn.hidden=!action; lastBtn=lbl; }
-  const lbl2=action2 ? action2.label+(touch?'':' (B)') : '';
+  const lbl=(numPlayers===1&&action) ? action.label+(touch?'':' (E)') : '';
+  if(lbl!==lastBtn){ actBtn.textContent=lbl; actBtn.hidden=!lbl; lastBtn=lbl; }
+  const lbl2=action2 ? action2.label+(touch||numPlayers>1?'':' (B)') : '';
   if(lbl2!==lastBtn2){ act2Btn.textContent=lbl2; act2Btn.hidden=!action2; lastBtn2=lbl2; }
   if(!action2) closeBridgeMenu();
-  const lbl3=action3 ? action3.label+(touch?'':' (G)') : '';
+  const lbl3=action3 ? action3.label+(touch||numPlayers>1?'':' (G)') : '';
   if(lbl3!==lastBtn3){ act3Btn.textContent=lbl3; act3Btn.hidden=!action3; lastBtn3=lbl3; }
   if(!action3) closeSwordMenu();
   if(weapon!==lastWeapon){ weaponEl.textContent='Weapon: '+WEAPONS[weapon].name; lastWeapon=weapon; }
@@ -444,7 +509,7 @@ function syncUI(){
 actBtn.addEventListener('click',()=>{ if(action) action.run(); canvas.focus(); });
 act2Btn.addEventListener('click',()=>{ if(action2) action2.run(); canvas.focus(); });
 act3Btn.addEventListener('click',()=>{ if(action3) action3.run(); canvas.focus(); });
-function swingSword(){ if(defeated||fadeDir||player.swing>0) return; player.swing=SWING_T; swingId++; }
+function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=10, MAX_HP=5;
 const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4}];
@@ -456,7 +521,7 @@ const ZLEVEL={
   3:{hp:7,speed:85,coreDmg:15,reward:15,r:20,scale:1.45,arm:'#27500A',shirt:'#3C3489',patch:'#26215C',skin:'#3B6D11',skinEdge:'#04342C'}
 };
 let gameTime=0, zombies=[], wave=0, waveTimer=WAVE_DELAY, spawnQueue=[], allDone=false, waveLive=false;
-let hp=MAX_HP, hurtCD=0, defeated=false, swingId=0, drops=[], arrows=[];
+let defeated=false, drops=[], arrows=[];
 const hpEl=document.getElementById('hp'), threatEl=document.getElementById('threat');
 const overEl=document.getElementById('over'), retryBtn=document.getElementById('retry');
 const CELL=40, GW=Math.ceil(W/CELL), GH=Math.ceil(H/CELL);
@@ -541,7 +606,7 @@ function spawnZombie(level){
     else { t-=PW; x=M; y=H-M-t; }
     ok=!blockedWorld(x,y,L.r+6,true) && !inMoat(x,y,40) && field[cellOf(x,y)]>=0 && zombies.every(o=>Math.hypot(o.x-x,o.y-y)>300);
   }
-  zombies.push({x,y,r:L.r,L,hp:1,maxHp:1,speed:L.speed,level,coreDmg:L.coreDmg,fx:0,fy:1,t:0,hitT:0,kb:0,kbx:0,kby:0,atkCD:0,atkT:0,lastSwing:-1,swim:true});
+  zombies.push({x,y,r:L.r,L,hp:1,maxHp:1,speed:L.speed,level,coreDmg:L.coreDmg,fx:0,fy:1,t:0,hitT:0,kb:0,kbx:0,kby:0,atkCD:0,atkT:0,hits:{},swim:true});
 }
 function separateZombies(){
   for(let i=0;i<zombies.length;i++) for(let j=i+1;j<zombies.length;j++){
@@ -558,9 +623,33 @@ function moveThing(o,vx,vy){
   if(!blockedWorld(o.x,o.y+vy,o.r,o.swim)){ o.y+=vy; moved=true; }
   return moved;
 }
-function pushPlayer(dx,dy,amt){
+function pushPlayer(p,dx,dy,amt){
   const d=Math.hypot(dx,dy)||1;
-  for(let k=0;k<amt;k+=2){ if(!moveThing(player,dx/d*2,dy/d*2)) break; }
+  for(let k=0;k<amt;k+=2){ if(!moveThing(p,dx/d*2,dy/d*2)) break; }
+}
+function targets(){ return players.filter(p=>p.scene==='world'&&!p.down&&!p.fadeDir); }
+function nearestIn(list,x,y){ let best=null,bd=Infinity; for(const p of list){ const d=Math.hypot(p.x-x,p.y-y); if(d<bd){bd=d;best=p;} } return [best,bd]; }
+function nearestTarget(x,y){ return nearestIn(targets(),x,y); }
+function hurtPlayer(p,dx,dy,amt){
+  if(p.hurtCD>0||p.inv>0||p.down) return;
+  p.hp--; p.hurtCD=0.5; pushPlayer(p,dx,dy,amt);
+  if(p.hp<=0) knockOut(p);
+}
+function knockOut(p){
+  p.hp=0; p.down=RESPAWN_T; p.swing=0; p.moving=false;
+  for(const z of zombies) if(z.aggro===p) z.aggro=null;
+  if(players.every(q=>q.down>0)){ defeat('player'); return; }
+  showMsg(p.col.name+' was knocked out. Back in '+RESPAWN_T+'s.');
+}
+function placeAtStart(p){
+  p.scene='world'; p.fade=0; p.fadeDir=0; p.pending=null;
+  p.x=START.x+START_OFF[p.i][0]; p.y=START.y+START_OFF[p.i][1]; p.fx=0; p.fy=1;
+  const [tx,ty]=camTarget(p); p.camX=tx; p.camY=ty;
+}
+function respawn(p){
+  p.down=0; p.hp=MAX_HP; p.inv=1.5; p.hurtCD=0;
+  placeAtStart(p);
+  showMsg(p.col.name+' is back in the fight!');
 }
 function zSpeed(z){ return z.speed*(z.inWater?SWIM_FACTOR:1); }
 function walkToCore(z,dt){
@@ -589,9 +678,9 @@ function updateSkeleton(z,dt){
   if(z.atkT>0) z.atkT-=dt;
   z.atkCD-=dt;
   if(z.kb>0){ z.kb-=dt; moveThing(z,z.kbx*dt,z.kby*dt); return; }
-  const pd=Math.hypot(player.x-z.x,player.y-z.y), cd=Math.hypot(core.x-z.x,core.y-z.y)-core.r;
+  const [tp,pd]=nearestTarget(z.x,z.y), cd=Math.hypot(core.x-z.x,core.y-z.y)-core.r;
   let tx=null, ty=null;
-  if(pd<L.range){ z.shooting='player'; tx=player.x; ty=player.y; }
+  if(tp&&pd<L.range){ z.shooting='player'; tx=tp.x; ty=tp.y; }
   else if(cd<L.range-40){ z.shooting='core'; tx=core.x; ty=core.y; }
   else z.shooting=null;
   if(z.shooting){
@@ -612,9 +701,9 @@ function updateArrows(dt){
     const steps=3;
     for(let k=0;k<steps && !a.done;k++){
       a.x+=a.vx*dt/steps; a.y+=a.vy*dt/steps;
-      if(Math.hypot(player.x-a.x,player.y-a.y)<player.r+3){
-        a.done=true;
-        if(hurtCD<=0){ hp--; hurtCD=0.5; pushPlayer(a.vx,a.vy,14); if(hp<=0){ defeat('player'); return; } }
+      const hitP=targets().find(p=>Math.hypot(p.x-a.x,p.y-a.y)<p.r+3);
+      if(hitP){
+        a.done=true; hurtPlayer(hitP,a.vx,a.vy,14); if(defeated) return;
       } else if(Math.hypot(core.x-a.x,core.y-a.y)<core.r+3){
         a.done=true; core.hp=Math.max(0,core.hp-a.coreDmg); core.hitT=0.25;
         if(core.hp<=0){ defeat('core'); return; }
@@ -629,18 +718,23 @@ function updateZombie(z,dt){
   z.inWater=inWater(z.x,z.y);
   if(z.hitT>0) z.hitT-=dt;
   if(z.atkT>0) z.atkT-=dt;
-  const dx=player.x-z.x, dy=player.y-z.y, d=Math.hypot(dx,dy)||1;
+  const T=targets();
+  if(z.aggro && (!T.includes(z.aggro) || Math.hypot(z.aggro.x-z.x,z.aggro.y-z.y)>180)) z.aggro=null;
+  if(!z.aggro){
+    const [tp,td]=nearestIn(T,z.x,z.y);
+    if(tp&&td<110){ z.aggro=tp; z.atkCD=0.4; z.reached=false; showMsg('A zombie turned on '+pname(tp)+'!'); }
+  }
+  const ap=z.aggro;
+  const dx=ap?ap.x-z.x:0, dy=ap?ap.y-z.y:0, d=Math.hypot(dx,dy)||1;
   const cx=core.x-z.x, cy=core.y-z.y, cd=Math.hypot(cx,cy)||1;
-  if(!z.aggro && d<110){ z.aggro=true; z.atkCD=0.4; z.reached=false; showMsg('The zombie turned on you!'); }
-  else if(z.aggro && d>180){ z.aggro=false; }
   if(z.kb>0){ z.kb-=dt; moveThing(z,z.kbx*dt,z.kby*dt); }
-  else if(z.aggro){
+  else if(ap){
     z.fx=dx/d; z.fy=dy/d;
-    if(d < z.r+player.r+10){
+    if(d < z.r+ap.r+10){
       z.atkCD-=dt;
       if(z.atkCD<=0){
         z.atkCD=1; z.atkT=0.2;
-        if(hurtCD<=0){ hp--; hurtCD=0.5; pushPlayer(dx,dy,36); if(hp<=0){ defeat('player'); return; } }
+        hurtPlayer(ap,dx,dy,36); if(defeated) return;
       }
     } else {
       z.t+=dt;
@@ -662,16 +756,18 @@ function updateZombie(z,dt){
   }
 }
 function checkSwordHit(){
-  if(player.swing<=0) return;
-  for(const z of zombies){
-    if(z.lastSwing===swingId) continue;
-    const dx=z.x-player.x, dy=z.y-player.y, d=Math.hypot(dx,dy);
-    if(d>58) continue;
-    let diff=Math.atan2(dy,dx)-Math.atan2(player.fy,player.fx);
-    diff=Math.atan2(Math.sin(diff),Math.cos(diff));
-    if(Math.abs(diff)>1.5 && d>z.r+player.r+2) continue;
-    z.lastSwing=swingId;
-    z.hp-=1/WEAPONS[weapon].hits[z.level]; z.hitT=0.2; z.kb=0.15; z.kbx=dx/(d||1)*320; z.kby=dy/(d||1)*320;
+  for(const p of players){
+    if(p.swing<=0||p.scene!=='world'||p.down) continue;
+    for(const z of zombies){
+      if(z.hits[p.i]===p.swingId) continue;
+      const dx=z.x-p.x, dy=z.y-p.y, d=Math.hypot(dx,dy);
+      if(d>58) continue;
+      let diff=Math.atan2(dy,dx)-Math.atan2(p.fy,p.fx);
+      diff=Math.atan2(Math.sin(diff),Math.cos(diff));
+      if(Math.abs(diff)>1.5 && d>z.r+p.r+2) continue;
+      z.hits[p.i]=p.swingId;
+      z.hp-=1/WEAPONS[weapon].hits[z.level]; z.hitT=0.2; z.kb=0.15; z.kbx=dx/(d||1)*320; z.kby=dy/(d||1)*320;
+    }
   }
   const dead=zombies.filter(z=>z.hp<=1e-6);
   if(!dead.length) return;
@@ -684,7 +780,8 @@ function checkSwordHit(){
 function updateDrops(dt){
   for(const c of drops){
     c.t+=dt;
-    const dx=player.x-c.x, dy=player.y-c.y, d=Math.hypot(dx,dy);
+    const [tp]=nearestTarget(c.x,c.y); if(!tp) continue;
+    const dx=tp.x-c.x, dy=tp.y-c.y, d=Math.hypot(dx,dy);
     if(d<90 && d>0){ const sp=Math.min(d,320*dt); c.x+=dx/d*sp; c.y+=dy/d*sp; }
     if(d<26){ c.taken=true; coins+=c.value; showMsg('Picked up '+c.value+' coins.'); }
   }
@@ -703,29 +800,35 @@ function drawDrop(c){
   label('+'+c.value,c.x,c.y-20+bob,'#854F0B',13);
 }
 function defeat(kind){
-  defeated=true; keys.clear(); joy=null;
+  defeated=true; held.clear(); joy=null;
   if(kind==='core'){
     document.getElementById('overT').textContent='The village core fell';
     document.getElementById('overP').textContent='The zombies destroyed the core. Your coins and walls are kept.';
   } else {
-    document.getElementById('overT').textContent='You were defeated';
-    document.getElementById('overP').textContent='A zombie got you. Your coins and walls are kept.';
+    document.getElementById('overT').textContent=numPlayers===1?'You were defeated':'Every player was knocked out';
+    document.getElementById('overP').textContent=(numPlayers===1?'A zombie got you.':'All players were down at the same time.')+' Your coins and walls are kept.';
   }
   overEl.hidden=false; retryBtn.focus();
 }
 retryBtn.addEventListener('click',()=>{
-  hp=MAX_HP; hurtCD=0; zombies=[]; drops=[]; arrows=[]; core.hp=core.maxHp; core.hitT=0; gameTime=0; defeated=false;
+  zombies=[]; drops=[]; arrows=[]; core.hp=core.maxHp; core.hitT=0; gameTime=0; defeated=false;
   wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false;
-  scene='world'; player.x=START.x; player.y=START.y; player.fx=0; player.fy=1; player.swing=0;
-  const [tx,ty]=camTarget(); camX=tx; camY=ty;
+  resetPlayers();
   overEl.hidden=true; canvas.focus();
 });
 const swingBtn=document.getElementById('swing');
-swingBtn.addEventListener('click',()=>{ swingSword(); canvas.focus(); });
+swingBtn.addEventListener('click',()=>{ swingSword(players[0]); canvas.focus(); });
 
-const keys = new Set();
-const KEYMAP = {ArrowUp:'u',KeyW:'u',ArrowDown:'d',KeyS:'d',ArrowLeft:'l',KeyA:'l',ArrowRight:'r',KeyD:'r'};
+const held = new Set();
+function bindOf(p){ return numPlayers===1?SOLO_BIND:BINDS[p.i]; }
+function isMoveKey(code){ return players.some(p=>{ const B=bindOf(p); return B.u.includes(code)||B.d.includes(code)||B.l.includes(code)||B.r.includes(code); }); }
 window.addEventListener('keydown',e=>{
+  if(!modesEl.hidden){
+    const n={Digit1:1,Digit2:2,Digit3:3,Digit4:4,Numpad1:1,Numpad2:2,Numpad3:3,Numpad4:4}[e.code];
+    if(n){ e.preventDefault(); startGame(n); return; }
+    if(e.code==='Escape' && started){ e.preventDefault(); closeModes(); }
+    return;
+  }
   if(defeated) return;
   if(!bmenu.hidden){
     if(e.code==='Escape'){ e.preventDefault(); closeBridgeMenu(); return; }
@@ -739,18 +842,27 @@ window.addEventListener('keydown',e=>{
     if(pick){ e.preventDefault(); buySword(pick); return; }
     if(smenu.contains(e.target) && (e.code==='Space'||e.code==='Enter'||e.code==='Tab')) return;
   }
-  if(e.code==='KeyE'||e.code==='Space'){ e.preventDefault(); if(!e.repeat && action) action.run(); return; }
-  if(e.code==='KeyB'){ e.preventDefault(); if(!e.repeat && action2) action2.run(); return; }
-  if(e.code==='KeyG'){ e.preventDefault(); if(!e.repeat && action3) action3.run(); return; }
-  if(e.code==='KeyF'||e.code==='KeyJ'){ e.preventDefault(); if(!e.repeat) swingSword(); return; }
-  const k=KEYMAP[e.code]; if(k){keys.add(k); e.preventDefault();} });
-window.addEventListener('keyup',e=>{ const k=KEYMAP[e.code]; if(k) keys.delete(k); });
-window.addEventListener('blur',()=>keys.clear());
+  if(numPlayers===1){
+    if(e.code==='KeyE'||e.code==='Space'||e.code==='ShiftRight'){ e.preventDefault(); if(!e.repeat && action) action.run(); return; }
+    if(e.code==='KeyB'){ e.preventDefault(); if(!e.repeat && action2) action2.run(); return; }
+    if(e.code==='KeyG'){ e.preventDefault(); if(!e.repeat && action3) action3.run(); return; }
+    if(e.code==='KeyF'||e.code==='KeyJ'||e.code==='Enter'||e.code==='NumpadEnter'){ e.preventDefault(); if(!e.repeat) swingSword(players[0]); return; }
+  } else {
+    for(const p of players){
+      const B=BINDS[p.i];
+      if(B.atk.includes(e.code)){ e.preventDefault(); if(!e.repeat) swingSword(p); return; }
+      if(B.use.includes(e.code)){ e.preventDefault(); if(!e.repeat && p.action) p.action.run(); return; }
+    }
+  }
+  if(isMoveKey(e.code)){ held.add(e.code); e.preventDefault(); }
+});
+window.addEventListener('keyup',e=>{ held.delete(e.code); });
+window.addEventListener('blur',()=>held.clear());
 
 let joy=null;
 canvas.addEventListener('pointerdown',e=>{
   canvas.focus();
-  if(e.pointerType==='mouse'){ if(e.button===0) swingSword(); return; }
+  if(e.pointerType==='mouse'){ if(e.button===0 && numPlayers===1) swingSword(players[0]); return; }
   canvas.setPointerCapture(e.pointerId);
   joy={id:e.pointerId,ox:e.offsetX,oy:e.offsetY,dx:0,dy:0};
 });
@@ -764,16 +876,36 @@ function endJoy(e){ if(joy&&e.pointerId===joy.id) joy=null; }
 canvas.addEventListener('pointerup',endJoy);
 canvas.addEventListener('pointercancel',endJoy);
 const touch=matchMedia('(pointer: coarse)').matches;
-const baseHint=(touch?'Touch and drag anywhere to move.':'Move with WASD or the arrow keys. Press F or click to swing.')+' Walk into a door to go inside.';
+const baseHint=(touch?'Touch and drag anywhere to move.':'Move with the arrow keys or WASD. Press Enter, F or click to swing.')+' Walk into a door to go inside.';
 if(!touch) swingBtn.textContent='Swing sword (F)';
 const exitHint='Walk out through the bottom door to leave.';
+const multiHint='Split screen: each player\'s keys are shown in their corner. Walk into a door to go inside. Shop menus use the on-screen buttons.';
 hintEl.textContent=baseHint;
 
-let vw=0, vh=0, dpr=1;
+let vw=0, vh=0, CW=0, CH=0, dpr=1, mapCell=null;
+function layout(){
+  const n=players.length, g=4;
+  mapCell=null;
+  if(!n) return;
+  if(n===1){ players[0].view={x:0,y:0,w:CW,h:CH}; }
+  else if(n===2){
+    const w=(CW-g)/2;
+    players[1].view={x:0,y:0,w,h:CH};
+    players[0].view={x:w+g,y:0,w,h:CH};
+  } else {
+    const w=(CW-g)/2, h=(CH-g)/2;
+    players[1].view={x:0,y:0,w,h};
+    players[0].view={x:w+g,y:0,w,h};
+    players[2].view={x:w+g,y:h+g,w,h};
+    if(n===4) players[3].view={x:0,y:h+g,w,h};
+    else mapCell={x:0,y:h+g,w,h};
+  }
+}
 function resize(){
   dpr=Math.min(window.devicePixelRatio||1,2);
-  vw=canvas.clientWidth; vh=canvas.clientHeight;
-  canvas.width=Math.round(vw*dpr); canvas.height=Math.round(vh*dpr);
+  CW=canvas.clientWidth; CH=canvas.clientHeight; vw=CW; vh=CH;
+  canvas.width=Math.round(CW*dpr); canvas.height=Math.round(CH*dpr);
+  layout();
 }
 window.addEventListener('resize',resize); resize();
 
@@ -835,7 +967,6 @@ function drawWall(R){
 }
 function drawSkipButton(){
   const b=SKIP_BTN, down=(b.pressT||0)>0;
-  if(down) b.pressT-=1/60;
   ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(b.x+3,b.y+8,b.r+12,(b.r+12)*0.5,0,0,7); ctx.fill();
   ctx.fillStyle='#888780'; ctx.beginPath(); ctx.ellipse(b.x,b.y+4,b.r+10,(b.r+10)*0.6,0,0,7); ctx.fill();
   ctx.strokeStyle='#5F5E5A'; ctx.lineWidth=2; ctx.stroke();
@@ -991,18 +1122,21 @@ function drawSword(p,bob){
   ctx.restore();
 }
 function drawPlayer(p){
+  if(p.down>0) return;
+  const C=p.col;
   const bob = p.moving ? Math.sin(p.t*14)*1.6 : 0;
+  if(p.inv>0 && Math.floor(p.inv*8)%2) ctx.globalAlpha=0.45;
   ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(p.x,p.y+p.r*0.8,p.r,p.r*0.45,0,0,7); ctx.fill();
   const swordBehind = p.swing<=0 ? p.fy<-0.3 : Math.sin(Math.atan2(p.fy,p.fx)-1.3+2.6*(1-p.swing/SWING_T))<-0.3;
   if(swordBehind) drawSword(p,bob);
   if(p.moving){
     const s=Math.sin(p.t*14)*4;
-    ctx.fillStyle='#042C53';
+    ctx.fillStyle=C.dark;
     ctx.beginPath(); ctx.arc(p.x-6,p.y+10+s*0.3,4,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(p.x+6,p.y+10-s*0.3,4,0,7); ctx.fill();
   }
-  ctx.fillStyle='#185FA5'; ctx.beginPath(); ctx.arc(p.x,p.y+bob,p.r,0,7); ctx.fill();
-  ctx.strokeStyle='#042C53'; ctx.lineWidth=2; ctx.stroke();
+  ctx.fillStyle=C.body; ctx.beginPath(); ctx.arc(p.x,p.y+bob,p.r,0,7); ctx.fill();
+  ctx.strokeStyle=C.dark; ctx.lineWidth=2; ctx.stroke();
   const hx=p.x+p.fx*3, hy=p.y-6+bob+p.fy*2;
   ctx.fillStyle='#F5C4B3'; ctx.beginPath(); ctx.arc(hx,hy,9,0,7); ctx.fill();
   ctx.fillStyle='#4A1B0C'; ctx.beginPath(); ctx.arc(hx-p.fx*2,hy-3-p.fy*2,8,Math.PI*1.05,Math.PI*1.95); ctx.fill();
@@ -1012,38 +1146,55 @@ function drawPlayer(p){
     ctx.beginPath(); ctx.arc(hx+p.fx*4+3,hy+1+p.fy,1.6,0,7); ctx.fill();
   }
   if(!swordBehind) drawSword(p,bob);
-  if(hurtCD>0.6){ ctx.fillStyle='rgba(226,75,74,.55)'; ctx.beginPath(); ctx.arc(p.x,p.y-3+bob,p.r+3,0,7); ctx.fill(); }
-  label('You',p.x,p.y-34+bob,'#042C53',14);
+  if(p.hurtCD>0.25){ ctx.fillStyle='rgba(226,75,74,.55)'; ctx.beginPath(); ctx.arc(p.x,p.y-3+bob,p.r+3,0,7); ctx.fill(); }
+  ctx.globalAlpha=1;
+  label(numPlayers===1?'You':C.name,p.x,p.y-34+bob,C.dark,14);
 }
 
 let camX=0, camY=0, last=performance.now();
-function update(dt){
-  if(player.swing>0) player.swing=Math.max(0,player.swing-dt);
-  if(defeated){ player.moving=false; return; }
-  if(hurtCD>0) hurtCD-=dt;
-  if(fadeDir){
-    fade+=fadeDir*dt*5;
-    if(fadeDir>0&&fade>=1){ fade=1; applyScene(); fadeDir=-1; }
-    else if(fadeDir<0&&fade<=0){ fade=0; fadeDir=0; }
-    player.moving=false;
+function zoneOf(player){
+  if(player.scene!=='world') return interiors[player.scene].name;
+  const inV = player.x>VIL.x&&player.x<VIL.x+VIL.w&&player.y>VIL.y&&player.y<VIL.y+VIL.h;
+  if(inV) return 'Inside the village';
+  if(player.y<WALL_Y && player.x>VIL.x-200 && player.x<VIL.x+VIL.w+200) return 'North of the wall';
+  if(inMoat(player.x,player.y,0) && bridgeAt(player.x,player.y,30)) return 'On the '+bridgeAt(player.x,player.y,30).name.toLowerCase()+' bridge';
+  if(player.x<VIL.x && player.y<VIL.y) return 'In the forest';
+  return 'Outside the village';
+}
+function updatePlayer(p,dt){
+  if(p.hurtCD>0) p.hurtCD-=dt;
+  if(p.inv>0) p.inv-=dt;
+  if(p.down>0){ p.down-=dt; p.moving=false; if(p.down<=0) respawn(p); return; }
+  if(p.fadeDir){
+    p.fade+=p.fadeDir*dt*5;
+    if(p.fadeDir>0&&p.fade>=1){ p.fade=1; applyScene(p); p.fadeDir=-1; }
+    else if(p.fadeDir<0&&p.fade<=0){ p.fade=0; p.fadeDir=0; }
+    p.moving=false;
     return;
   }
+  const B=bindOf(p), on=a=>a.some(c=>held.has(c));
   let ix=0, iy=0;
-  if(keys.has('l')) ix-=1; if(keys.has('r')) ix+=1;
-  if(keys.has('u')) iy-=1; if(keys.has('d')) iy+=1;
+  if(on(B.l)) ix-=1; if(on(B.r)) ix+=1;
+  if(on(B.u)) iy-=1; if(on(B.d)) iy+=1;
   let mag=Math.hypot(ix,iy);
-  if(joy && (Math.abs(joy.dx)>6||Math.abs(joy.dy)>6)){ ix=joy.dx/50; iy=joy.dy/50; mag=Math.min(1,Math.hypot(ix,iy)); }
+  if(p.i===0 && joy && (Math.abs(joy.dx)>6||Math.abs(joy.dy)>6)){ ix=joy.dx/50; iy=joy.dy/50; mag=Math.min(1,Math.hypot(ix,iy)); }
   else if(mag>0){ ix/=mag; iy/=mag; mag=1; }
-  player.moving = mag>0.05;
-  if(player.moving){
-    const n=Math.hypot(ix,iy)||1; player.fx=ix/n; player.fy=iy/n;
-    const vx=ix*player.speed*dt, vy=iy*player.speed*dt;
-    if(!blocked(player.x+vx,player.y)) player.x+=vx;
-    if(!blocked(player.x,player.y+vy)) player.y+=vy;
-    player.t+=dt;
+  p.moving = mag>0.05;
+  if(p.moving){
+    const n=Math.hypot(ix,iy)||1; p.fx=ix/n; p.fy=iy/n;
+    const vx=ix*p.speed*dt, vy=iy*p.speed*dt;
+    if(!blocked(p,p.x+vx,p.y)) p.x+=vx;
+    if(!blocked(p,p.x,p.y+vy)) p.y+=vy;
+    p.t+=dt;
   }
-  if(!fadeDir){ gameTime+=dt; updateWaves(dt); }
-  if(scene==='world'){
+}
+function update(dt){
+  for(const p of players) if(p.swing>0) p.swing=Math.max(0,p.swing-dt);
+  if(SKIP_BTN.pressT>0) SKIP_BTN.pressT-=dt;
+  if(defeated){ for(const p of players) p.moving=false; return; }
+  for(const p of players) updatePlayer(p,dt);
+  if(!players.every(p=>p.fadeDir)){ gameTime+=dt; updateWaves(dt); }
+  if(players.some(p=>p.scene==='world'&&!p.fadeDir)){
     if(core.hitT>0) core.hitT-=dt;
     spawnPending();
     for(const z of zombies){ updateZombie(z,dt); if(defeated) return; }
@@ -1053,40 +1204,112 @@ function update(dt){
     checkSwordHit();
   }
   if(defeated) return;
-  if(scene==='world'){
-    for(const key of ['house','shop']){
-      const R=interiors[key].bld, dx=R.x+R.w/2;
-      if(player.moving && player.fy<-0.5 && Math.abs(player.x-dx)<22 && player.y>R.y+R.h && player.y<=R.y+R.h+player.r+8) go(key);
-    }
-  } else if(player.y>interiors[scene].h-IT+2){ go('world'); }
-
-  const [tx,ty]=camTarget();
-  camX += (tx-camX)*Math.min(1,dt*8); camY += (ty-camY)*Math.min(1,dt*8);
-
-  if(scene!=='world'){
-    const rm=interiors[scene];
-    if(rm.npc&&rm.npc.wander) updateNPC(rm.npc,rm,dt);
-    const z=rm.name;
-    if(zoneEl.textContent!==z) zoneEl.textContent=z;
-    if(hintEl.textContent!==exitHint) hintEl.textContent=exitHint;
-    return;
+  for(const key of ['house','shop']){
+    const rm=interiors[key];
+    roomPlayers=players.filter(p=>p.scene===key&&!p.fadeDir&&!p.down);
+    if(roomPlayers.length && rm.npc && rm.npc.wander) updateNPC(rm.npc,rm,dt);
   }
-  if(hintEl.textContent!==baseHint) hintEl.textContent=baseHint;
-  let zone;
-  const inV = player.x>VIL.x&&player.x<VIL.x+VIL.w&&player.y>VIL.y&&player.y<VIL.y+VIL.h;
-  if(inV) zone='Inside the village';
-  else if(player.y<WALL_Y && player.x>VIL.x-200 && player.x<VIL.x+VIL.w+200) zone='North of the wall';
-  else if(inMoat(player.x,player.y,0) && bridgeAt(player.x,player.y,30)) zone='On the '+bridgeAt(player.x,player.y,30).name.toLowerCase()+' bridge';
-  else if(player.x<VIL.x && player.y<VIL.y) zone='In the forest';
-  else zone='Outside the village';
-  if(zoneEl.textContent!==zone) zoneEl.textContent=zone;
+  for(const p of players){
+    if(!p.fadeDir && !p.down){
+      if(p.scene==='world'){
+        for(const key of ['house','shop']){
+          const R=interiors[key].bld, dx=R.x+R.w/2;
+          if(p.moving && p.fy<-0.5 && Math.abs(p.x-dx)<22 && p.y>R.y+R.h && p.y<=R.y+R.h+p.r+8) go(p,key);
+        }
+      } else if(p.y>interiors[p.scene].h-IT+2){ go(p,'world'); }
+    }
+    const [tx,ty]=camTarget(p);
+    p.camX += (tx-p.camX)*Math.min(1,dt*8); p.camY += (ty-p.camY)*Math.min(1,dt*8);
+  }
+  if(numPlayers===1){
+    const p=players[0];
+    if(p.fadeDir) return;
+    const z=zoneOf(p); if(zoneEl.textContent!==z) zoneEl.textContent=z;
+    const h=p.scene==='world'?baseHint:exitHint; if(hintEl.textContent!==h) hintEl.textContent=h;
+  }
 }
 
 function inView(x,y,pad){ return x>camX-pad&&x<camX+vw+pad&&y>camY-pad&&y<camY+vh+pad; }
 
 function render(){
   ctx.setTransform(dpr,0,0,dpr,0,0);
-  if(scene!=='world'){ renderRoom(interiors[scene]); drawOverlays(); return; }
+  if(numPlayers>1){ ctx.fillStyle='#173404'; ctx.fillRect(0,0,CW,CH); }
+  for(const p of players) renderView(p);
+  if(numPlayers===1){ if(players[0] && players[0].scene==='world') drawMinimapAt(CW-MW-12,CH-MH-12,MW,MH); }
+  else if(numPlayers===2) drawMinimapAt(CW/2-MW/2,CH-MH-12,MW,MH);
+  else if(numPlayers===3 && mapCell){
+    const c=mapCell, k=Math.min((c.w-48)/W,(c.h-64)/H), w=W*k, h=H*k;
+    hudText('Map',c.x+c.w/2,c.y+22,'#EAF3DE',17,'center');
+    drawMinimapAt(c.x+(c.w-w)/2,c.y+40+(c.h-52-h)/2,w,h);
+  }
+  else drawMinimapAt(CW/2-MW/2,CH-MH-12,MW,MH);
+  drawOverlays();
+}
+function renderView(p){
+  const V=p.view; viewer=p; vw=V.w; vh=V.h; camX=p.camX; camY=p.camY;
+  ctx.save(); ctx.beginPath(); ctx.rect(V.x,V.y,V.w,V.h); ctx.clip(); ctx.translate(V.x,V.y);
+  if(p.scene==='world') renderWorld(p); else renderRoom(interiors[p.scene]);
+  drawViewHud(p);
+  ctx.restore();
+}
+function hudText(text,x,y,color,size,align){
+  ctx.font=`600 ${size}px "Pixelify Sans", ui-rounded, system-ui, sans-serif`;
+  ctx.textAlign=align||'left'; ctx.textBaseline='middle';
+  ctx.fillStyle='rgba(0,0,0,.55)'; ctx.fillText(text,x+1.5,y+1.5);
+  ctx.fillStyle=color; ctx.fillText(text,x,y);
+}
+function drawViewHud(p){
+  const V=p.view;
+  if(p.fade>0){ ctx.fillStyle=`rgba(20,20,18,${p.fade})`; ctx.fillRect(0,0,V.w,V.h); }
+  if(numPlayers===1) return;
+  if(p.down>0){
+    ctx.fillStyle='rgba(20,20,18,.6)'; ctx.fillRect(0,0,V.w,V.h);
+    hudText(p.col.name+' knocked out',V.w/2,V.h/2-14,'#FFFFFF',22,'center');
+    hudText('Back in '+Math.ceil(p.down)+'s',V.w/2,V.h/2+16,'#F1EFE8',16,'center');
+  }
+  const B=BINDS[p.i], bh=56, by=V.h-bh-10, zone=zoneOf(p);
+  ctx.font='600 13px "Pixelify Sans", ui-rounded, system-ui, sans-serif';
+  const w2=ctx.measureText(B.txt).width;
+  ctx.font='600 12px "Pixelify Sans", ui-rounded, system-ui, sans-serif';
+  const w1=48+MAX_HP*15+8+ctx.measureText(zone).width;
+  const bw=Math.min(V.w-20, Math.max(w1,w2)+24), right=V.x>0, bx=right?V.w-bw-10:10;
+  ctx.fillStyle='rgba(23,52,4,.82)'; roundRect(bx,by,bw,bh,10); ctx.fill();
+  ctx.strokeStyle=p.col.body; ctx.lineWidth=3; roundRect(bx,by,bw,bh,10); ctx.stroke();
+  hudText(p.col.name,bx+12,by+17,'#FFFFFF',17);
+  ctx.font='600 16px system-ui, sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+  for(let k=0;k<MAX_HP;k++){ ctx.fillStyle=k<p.hp?'#E24B4A':'rgba(240,149,149,.3)'; ctx.fillText('\u2665',bx+48+k*15,by+17); }
+  hudText(zone,bx+48+MAX_HP*15+8,by+17,'#C0DD97',12);
+  hudText(B.txt,bx+12,by+40,'#EAF3DE',13);
+  if(p.action && !p.down){
+    const txt='['+keyName(B.use[0])+'] '+p.action.label;
+    ctx.font='600 14px "Pixelify Sans", ui-rounded, system-ui, sans-serif';
+    const tw=Math.min(V.w-20, ctx.measureText(txt).width+24), px=right?V.w-tw-10:10;
+    ctx.fillStyle='#FAC775'; roundRect(px,by-40,tw,32,8); ctx.fill();
+    ctx.strokeStyle='#854F0B'; ctx.lineWidth=2; roundRect(px,by-40,tw,32,8); ctx.stroke();
+    ctx.fillStyle='#412402'; ctx.textAlign='left'; ctx.textBaseline='middle'; ctx.fillText(txt,px+12,by-24);
+  }
+}
+function drawMinimapAt(x,y,w,h){
+  ctx.fillStyle='rgba(23,52,4,.55)'; roundRect(x-4,y-4,w+8,h+8,8); ctx.fill();
+  ctx.drawImage(mini,x,y,w,h);
+  const sx=w/W, sy=h/H;
+  if(numPlayers===1){
+    const p=players[0];
+    ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5;
+    ctx.strokeRect(x+p.camX*sx, y+p.camY*sy, Math.min(p.view.w,W)*sx, Math.min(p.view.h,H)*sy);
+  }
+  ctx.fillStyle='#1D9E75'; ctx.beginPath(); ctx.arc(x+core.x*sx,y+core.y*sy,4,0,7); ctx.fill();
+  ctx.fillStyle='#E24B4A';
+  for(const z of zombies){ ctx.beginPath(); ctx.arc(x+z.x*sx,y+z.y*sy,4,0,7); ctx.fill(); }
+  ctx.fillStyle='#FAC775';
+  for(const c of drops){ ctx.beginPath(); ctx.arc(x+c.x*sx,y+c.y*sy,3,0,7); ctx.fill(); }
+  for(const p of players){
+    if(p.scene!=='world'||p.down) continue;
+    ctx.fillStyle=p.col.body; ctx.beginPath(); ctx.arc(x+p.x*sx,y+p.y*sy,4,0,7); ctx.fill();
+    ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5; ctx.stroke();
+  }
+}
+function renderWorld(viewP){
   ctx.fillStyle='#4F7F1C'; ctx.fillRect(0,0,vw,vh);
   ctx.save(); ctx.translate(-Math.round(camX),-Math.round(camY));
 
@@ -1129,8 +1352,8 @@ function render(){
   }
 
   for(const R of rects) if(R.kind==='wall') drawWall(R);
-  if(action&&action.slot){
-    ctx.globalAlpha=0.6; drawWall(action.slot); ctx.globalAlpha=1;
+  if(viewP.action&&viewP.action.slot){
+    ctx.globalAlpha=0.6; drawWall(viewP.action.slot); ctx.globalAlpha=1;
   }
   ctx.fillStyle='#633806'; ctx.fillRect(GATE.x1-6,WALL_Y-14,10,28); ctx.fillRect(GATE.x2-4,WALL_Y-14,10,28);
   label('North gate',RX,WALL_Y+30,'#444441',15);
@@ -1141,7 +1364,7 @@ function render(){
   for(const c of drops) if(inView(c.x,c.y,40)) drawDrop(c);
   const ents=[];
   for(const t of trees) if(inView(t.x,t.y,60)) ents.push({y:t.y,draw:()=>drawTree(t)});
-  ents.push({y:player.y,draw:()=>drawPlayer(player)});
+  for(const p of players) if(p.scene==='world'&&!p.down) ents.push({y:p.y,draw:()=>drawPlayer(p)});
   for(const z of zombies) ents.push({y:z.y,draw:()=>z.L.ranged?drawSkeleton(z):drawZombie(z)});
   for(const a of arrows) ents.push({y:a.y,draw:()=>drawArrow(a)});
   ents.push({y:core.y,draw:()=>drawCore(core)});
@@ -1150,19 +1373,6 @@ function render(){
 
   ctx.restore();
 
-  const mx=vw-MW-12, my=vh-MH-12;
-  ctx.fillStyle='rgba(23,52,4,.55)'; roundRect(mx-4,my-4,MW+8,MH+8,8); ctx.fill();
-  ctx.drawImage(mini,mx,my,MW,MH);
-  ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5;
-  ctx.strokeRect(mx+camX*MW/W, my+camY*MH/H, Math.min(vw,W)*MW/W, Math.min(vh,H)*MH/H);
-  ctx.fillStyle='#1D9E75'; ctx.beginPath(); ctx.arc(mx+core.x*MW/W,my+core.y*MH/H,4,0,7); ctx.fill();
-  ctx.fillStyle='#E24B4A'; ctx.fillRect(mx+SKIP_BTN.x*MW/W-3,my+SKIP_BTN.y*MH/H-3,6,6);
-  ctx.fillStyle='#E24B4A';
-  for(const z of zombies){ ctx.beginPath(); ctx.arc(mx+z.x*MW/W,my+z.y*MH/H,4,0,7); ctx.fill(); }
-  ctx.fillStyle='#FAC775';
-  for(const c of drops){ ctx.beginPath(); ctx.arc(mx+c.x*MW/W,my+c.y*MH/H,3,0,7); ctx.fill(); }
-  ctx.fillStyle='#185FA5'; ctx.beginPath(); ctx.arc(mx+player.x*MW/W,my+player.y*MH/H,4,0,7); ctx.fill();
-  ctx.strokeStyle='#FFFFFF'; ctx.lineWidth=1.5; ctx.stroke();
   for(const z of zombies){
     const sx=z.x-camX, sy=z.y-camY;
     if(sx<0||sy<0||sx>vw||sy>vh){
@@ -1175,8 +1385,6 @@ function render(){
       ctx.restore();
     }
   }
-
-  drawOverlays();
 }
 function drawOverlays(){
   if(joy){
@@ -1184,7 +1392,6 @@ function drawOverlays(){
     ctx.beginPath(); ctx.arc(joy.ox,joy.oy,50,0,7); ctx.stroke();
     ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(joy.ox+joy.dx,joy.oy+joy.dy,18,0,7); ctx.fill();
   }
-  if(fade>0){ ctx.fillStyle=`rgba(20,20,18,${fade})`; ctx.fillRect(0,0,vw,vh); }
 }
 
 const JARS=['#E24B4A','#378ADD','#639922','#EF9F27','#D4537E','#7F77DD','#1D9E75'];
@@ -1238,9 +1445,9 @@ function drawItem(it,i){
 }
 function drawNPC(n){
   const L=n.look;
-  const pd=Math.hypot(player.x-n.x,player.y-n.y);
+  const [np,pd]=nearestIn(roomPlayers,n.x,n.y);
   let fx=0, fy=1;
-  if(pd<190||!n.moving){ const d=pd||1; if(pd<190){ fx=(player.x-n.x)/d; fy=(player.y-n.y)/d; } else if(n.fx!=null){ fx=n.fx; fy=n.fy; } }
+  if(pd<190||!n.moving){ const d=pd||1; if(pd<190){ fx=(np.x-n.x)/d; fy=(np.y-n.y)/d; } else if(n.fx!=null){ fx=n.fx; fy=n.fy; } }
   else { fx=n.fx; fy=n.fy; }
   const bob = n.moving ? Math.sin(n.t*12)*1.4 : Math.sin(performance.now()/500)*1;
   ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(n.x,n.y+n.r*0.8,n.r,n.r*0.45,0,0,7); ctx.fill();
@@ -1268,11 +1475,11 @@ function npcFree(n,x,y,room){
   const r=n.r;
   if(x<IT+r+4||x>room.w-IT-r-4||y<IT+r+4||y>room.h-IT-60) return false;
   for(const it of room.items) if(circleRect(x,y,r+2,it)) return false;
-  if((player.x-x)**2+(player.y-y)**2 < (r+player.r+4)**2) return false;
+  for(const p of roomPlayers) if((p.x-x)**2+(p.y-y)**2 < (r+p.r+4)**2) return false;
   return true;
 }
 function updateNPC(n,room,dt){
-  if(Math.hypot(player.x-n.x,player.y-n.y)<90){ n.moving=false; return; }
+  if(roomPlayers.some(p=>Math.hypot(p.x-n.x,p.y-n.y)<90)){ n.moving=false; return; }
   if(n.wait>0){ n.wait-=dt; n.moving=false; return; }
   if(n.tx==null){
     for(let k=0;k<20;k++){
@@ -1326,20 +1533,35 @@ function renderRoom(room){
   ctx.beginPath(); ctx.moveTo(IT,h-IT); ctx.lineTo(IT,IT); ctx.lineTo(w-IT,IT); ctx.lineTo(w-IT,h-IT); ctx.stroke();
   ctx.fillStyle=room.wallDark; ctx.fillRect(w/2-DOOR_W/2-6,h-IT,6,IT); ctx.fillRect(w/2+DOOR_W/2,h-IT,6,IT);
   room.items.forEach(drawItem);
-  if(room.npc && room.npc.y<player.y){ drawNPC(room.npc); drawPlayer(player); }
-  else if(room.npc){ drawPlayer(player); drawNPC(room.npc); }
-  else drawPlayer(player);
-  if(room.npc && Math.hypot(player.x-room.npc.x,player.y-room.npc.y)<190) drawBubble(room.npc,room.w);
+  const key=room===interiors.house?'house':'shop';
+  roomPlayers=players.filter(p=>p.scene===key&&!p.down);
+  const ents=roomPlayers.map(p=>({y:p.y,draw:()=>drawPlayer(p)}));
+  if(room.npc) ents.push({y:room.npc.y,draw:()=>drawNPC(room.npc)});
+  ents.sort((a,b)=>a.y-b.y); for(const e of ents) e.draw();
+  if(room.npc && roomPlayers.some(p=>Math.hypot(p.x-room.npc.x,p.y-room.npc.y)<190)) drawBubble(room.npc,room.w);
   ctx.font='600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif';
   ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillStyle='#EAF3DE';
   ctx.fillText('Exit',w/2,h+54);
   ctx.restore();
 }
 
-camX=Math.max(0,Math.min(W-vw,player.x-vw/2)); camY=Math.max(0,Math.min(H-vh,player.y-vh/2));
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000); last=now;
-  update(dt); action=computeAction(); action2=computeAction2(); action3=computeAction3(); syncUI(); render(); requestAnimationFrame(frame);
+  if(modesEl.hidden) update(dt);
+  for(const p of players) p.action=computeActionFor(p);
+  action=players[0]?players[0].action:null; action2=computeAction2(); action3=computeAction3();
+  syncUI(); render(); requestAnimationFrame(frame);
+}
+function resetPlayers(){
+  players=[]; for(let i=0;i<numPlayers;i++) players.push(makePlayer(i));
+  layout();
+  for(const p of players){ const [tx,ty]=camTarget(p); p.camX=tx; p.camY=ty; }
+  held.clear(); joy=null;
+  const multi=numPlayers>1;
+  swingBtn.hidden=multi; zoneEl.hidden=multi; document.getElementById('hpWrap').hidden=multi;
+  hintEl.textContent=baseHint; hintEl.hidden=multi;
+  document.getElementById('stage').classList.toggle('multi',multi);
+  lastHp=-1; lastBtn=null; lastBtn2=null; lastBtn3=null;
 }
 const BASE_RECTS=rects.length;
 const resetBtn=document.getElementById('reset');
@@ -1349,13 +1571,11 @@ function resetGame(){
   for(const sl of slots) sl.built=false;
   coins=50; wallInv=0; weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
   zombies=[]; drops=[]; arrows=[]; wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false; gameTime=0;
-  hp=MAX_HP; hurtCD=0; core.hp=core.maxHp; core.hitT=0; defeated=false; overEl.hidden=true;
-  scene='world'; fade=0; fadeDir=0; pending=null; keys.clear(); joy=null;
-  player.x=START.x; player.y=START.y; player.fx=0; player.fy=1; player.swing=0; player.moving=false;
+  core.hp=core.maxHp; core.hitT=0; defeated=false; overEl.hidden=true;
+  resetPlayers();
   for(const k of ['house','shop']){ const n=interiors[k].npc; n.say=''; n.sayUntil=0; }
   const tf=interiors.house.npc; tf.x=440; tf.y=250; tf.tx=null; tf.wait=1; tf.moving=false;
   buildWalk(); buildMini();
-  const [tx,ty]=camTarget(); camX=tx; camY=ty;
   showMsg('Game reset.');
 }
 resetBtn.addEventListener('click',()=>{
@@ -1370,9 +1590,27 @@ resetBtn.addEventListener('click',()=>{
   canvas.focus();
 });
 
+const modesEl=document.getElementById('modes'), modesCancel=document.getElementById('modesCancel');
+let started=false;
+function openModes(){
+  modesCancel.hidden=!started; modesEl.hidden=false; held.clear();
+  const b=modesEl.querySelector('button[data-n="'+numPlayers+'"]'); if(b) b.focus();
+}
+function closeModes(){ modesEl.hidden=true; canvas.focus(); }
+function startGame(n){
+  numPlayers=n; started=true; modesEl.hidden=true;
+  resetGame();
+  showMsg(n===1?'Good luck!':n+' players. Good luck!');
+  canvas.focus();
+}
+modesEl.addEventListener('click',e=>{ const b=e.target.closest('button[data-n]'); if(b) startGame(+b.dataset.n); });
+modesCancel.addEventListener('click',closeModes);
+document.getElementById('playersBtn').addEventListener('click',openModes);
+
 buildWalk();
+resetPlayers();
 requestAnimationFrame(frame);
-canvas.focus();
+openModes();
 })();
 </script>
 </body>
