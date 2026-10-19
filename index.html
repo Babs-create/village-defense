@@ -457,9 +457,9 @@ function placeWall(sl){
   showMsg(left ? `Wall placed. ${left} open spots left.` : 'Every side of the village is walled.');
 }
 const WEAPONS={
-  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,s1:3}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
-  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,s1:2}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
-  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,s1:1}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
+  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,5:11,6:13,s1:3}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
+  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,5:10,6:12,s1:2}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
+  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,5:9,6:11,s1:1}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
 };
 let weapon='wood';
 const act3Btn=document.getElementById('act3'), weaponEl=document.getElementById('weapon');
@@ -483,7 +483,7 @@ function buySword(id){
   if(coins<W0.cost){ say(n,'The '+W0.name.toLowerCase()+' is '+W0.cost+' coins.'); closeSwordMenu(); return; }
   coins-=W0.cost; weapon=id;
   say(n,'A fine blade. Swing it well!');
-  showMsg('You bought the '+W0.name.toLowerCase()+'. Hits to kill: level 1 '+W0.hits[1]+', level 2 '+W0.hits[2]+', level 3 '+W0.hits[3]+', level 4 '+W0.hits[4]+'.');
+  showMsg('You bought the '+W0.name.toLowerCase()+'. Hits to kill: level 1 '+W0.hits[1]+', level 2 '+W0.hits[2]+', level 3 '+W0.hits[3]+', level 4 '+W0.hits[4]+', level 5 '+W0.hits[5]+', level 6 '+W0.hits[6]+'.');
   closeSwordMenu();
 }
 function pickSword(id){ if(NET.mode==='client'){ netSend({t:'sword',id}); closeSwordMenu(); } else buySword(id); }
@@ -566,11 +566,13 @@ act3Btn.addEventListener('click',()=>{ if(action3) action3.run(); canvas.focus()
 function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=10, MAX_HP=5;
-const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4}];
+const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6}];
 const ZLEVEL={
   1:{hp:3,speed:85,coreDmg:5,reward:5,r:14,scale:1,arm:'#639922',shirt:'#5F5E5A',patch:'#888780',skin:'#97C459',skinEdge:'#3B6D11'},
   2:{hp:5,speed:85,coreDmg:10,reward:10,r:17,scale:1.25,arm:'#3B6D11',shirt:'#2C2C2A',patch:'#712B13',skin:'#639922',skinEdge:'#173404'},
   s1:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 1',hp:3,speed:51,coreDmg:5,reward:5,r:14,scale:1,ranged:true,range:420,fireCD:2,arrowSpeed:380},
+  6:{hp:13,speed:85,coreDmg:30,reward:30,r:29,scale:2.05,arm:'#26215C',shirt:'#501313',patch:'#FAC775',skin:'#534AB7',skinEdge:'#26215C'},
+  5:{hp:11,speed:85,coreDmg:25,reward:25,r:26,scale:1.85,arm:'#085041',shirt:'#2C2C2A',patch:'#EF9F27',skin:'#0F6E56',skinEdge:'#04342C'},
   4:{hp:9,speed:85,coreDmg:20,reward:20,r:23,scale:1.65,arm:'#173404',shirt:'#791F1F',patch:'#501313',skin:'#27500A',skinEdge:'#173404'},
   3:{hp:7,speed:85,coreDmg:15,reward:15,r:20,scale:1.45,arm:'#27500A',shirt:'#3C3489',patch:'#26215C',skin:'#3B6D11',skinEdge:'#04342C'}
 };
@@ -584,7 +586,7 @@ const SWIM_COST=6;
 let fieldFrom=-1;
 function buildWalk(){
   const anyIntact=bridges.some(b=>b.intact);
-  for(let j=0;j<GH;j++) for(let i=0;i<GW;i++) { const cx=i*CELL+CELL/2, cy=j*CELL+CELL/2; walk[j*GW+i]=blockedWorld(cx,cy,20,true)?0:(inWater(cx,cy)?(anyIntact?0:2):1); }
+  for(let j=0;j<GH;j++) for(let i=0;i<GW;i++) { const cx=i*CELL+CELL/2, cy=j*CELL+CELL/2; walk[j*GW+i]=blockedWorld(cx,cy,30,true)?0:(inWater(cx,cy)?(anyIntact?0:2):1); }
   fieldFrom=-1;
 }
 function cellOf(x,y){
@@ -816,7 +818,7 @@ function checkSwordHit(){
     for(const z of zombies){
       if(z.hits[p.i]===p.swingId) continue;
       const dx=z.x-p.x, dy=z.y-p.y, d=Math.hypot(dx,dy);
-      if(d>58) continue;
+      if(d>44+z.r) continue;
       let diff=Math.atan2(dy,dx)-Math.atan2(p.fy,p.fx);
       diff=Math.atan2(Math.sin(diff),Math.cos(diff));
       if(Math.abs(diff)>1.5 && d>z.r+p.r+2) continue;
