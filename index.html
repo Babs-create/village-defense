@@ -119,6 +119,11 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #modes .primary:hover{background:#EF9F27;}
 #modes .primary:disabled{opacity:.5;cursor:default;}
 #modes .back{width:100%;font:inherit;padding:9px;border-radius:8px;background:transparent;color:var(--ink);border:2px solid var(--edge);cursor:pointer;margin-top:8px;}
+#nameRow{display:flex;flex-direction:column;gap:4px;margin:4px 0 12px;}
+#nameRow label{font-size:14px;font-weight:600;color:var(--ink2);}
+#nameInput{font:inherit;font-size:20px;font-weight:600;padding:8px 10px;border-radius:10px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
+#nameInput:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#nameInput.bad{border-color:#A32D2D;}
 #joinForm{display:flex;gap:8px;align-items:stretch;}
 #joinCode{flex:1;min-width:0;font:inherit;font-size:30px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;text-align:center;padding:6px 8px;border-radius:10px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
 #joinCode:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
@@ -171,6 +176,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <h2>Village Defense</h2>
     <div id="mMain">
       <p class="sub">Defend the village core from waves of zombies.</p>
+      <div id="nameRow"><label for="nameInput">Username</label><input id="nameInput" maxlength="12" autocomplete="nickname" spellcheck="false" placeholder="Type a username" aria-describedby="mainStatus"></div>
       <div class="mgrid">
         <button type="button" id="mSolo"><b>Play solo</b><span>Just you on this computer</span></button>
         <button type="button" id="mHost"><b>Host an online game</b><span>Get a code to share with up to 3 friends</span></button>
@@ -322,7 +328,10 @@ function makePlayer(i){
     swing:0, swingId:0, hp:MAX_HP, hurtCD:0, inv:0, down:0, scene:'world', fade:0, fadeDir:0, pending:null, camX:0, camY:0,
     view:{x:0,y:0,w:100,h:100}, action:null};
 }
-function pname(p){ return online()?p.col.name:'you'; }
+function cleanName(v){ return String(v==null?'':v).replace(/[^A-Za-z0-9 _.\-]/g,'').replace(/\s+/g,' ').trim().slice(0,12); }
+let myName=''; try{ myName=cleanName(localStorage.getItem('vd-username')); }catch(e){}
+function dn(p){ return (p&&p.name)||(p?p.col.name:''); }
+function pname(p){ return online()?dn(p):'you'; }
 function keyName(c){ return c==='ShiftRight'?'Right Shift':c.replace('Key',''); }
 const DOOR_W=60, IT=24;
 const interiors={
@@ -709,7 +718,7 @@ function knockOut(p){
   p.hp=0; p.down=RESPAWN_T; p.swing=0; p.moving=false;
   for(const z of zombies) if(z.aggro===p) z.aggro=null;
   if(players.every(q=>q.down>0)){ defeat('player'); return; }
-  showMsg((online()?p.col.name+' was':'You were')+' knocked out. Back in '+RESPAWN_T+'s.');
+  showMsg((online()?dn(p)+' was':'You were')+' knocked out. Back in '+RESPAWN_T+'s.');
 }
 function placeAtStart(p){
   p.scene='world'; p.fade=0; p.fadeDir=0; p.pending=null; p.tp=(p.tp|0)+1;
@@ -719,7 +728,7 @@ function placeAtStart(p){
 function respawn(p){
   p.down=0; p.hp=MAX_HP; p.inv=1.5; p.hurtCD=0;
   placeAtStart(p);
-  showMsg(online()?p.col.name+' is back in the fight!':'You are back in the fight!');
+  showMsg(online()?dn(p)+' is back in the fight!':'You are back in the fight!');
 }
 function zSpeed(z){ return z.speed*(z.inWater?SWIM_FACTOR:1); }
 function walkToCore(z,dt){
@@ -1199,7 +1208,7 @@ function drawPlayer(p){
   if(!swordBehind) drawSword(p,bob);
   if(p.hurtCD>0.25){ ctx.fillStyle='rgba(226,75,74,.55)'; ctx.beginPath(); ctx.arc(p.x,p.y-3+bob,p.r+3,0,7); ctx.fill(); }
   ctx.globalAlpha=1;
-  label(p===me?'You':C.name,p.x,p.y-34+bob,C.dark,14);
+  label(dn(p)||(p===me?'You':C.name),p.x,p.y-34+bob,C.dark,14);
 }
 
 let camX=0, camY=0, last=performance.now();
@@ -1594,6 +1603,7 @@ function resetPlayers(){
   if(NET.mode==='solo'){ players=[makePlayer(0)]; }
   else for(const p of players){ p.hp=MAX_HP; p.down=0; p.inv=0; p.hurtCD=0; p.swing=0; placeAtStart(p); }
   me=players.find(p=>p.i===NET.slot)||players[0]||null;
+  if(me && NET.mode!=='client') me.name=myName;
   layout();
   for(const p of players){ const [tx,ty]=camTarget(p); p.camX=tx; p.camY=ty; }
   held.clear(); joy=null;
@@ -1640,27 +1650,27 @@ function openModes(which){
   held.clear();
   if(!which) which = online() ? 'online' : 'main';
   if(which==='online'){
-    onlineInfo.textContent = NET.mode==='host' ? 'You are hosting game '+NET.code+'. Friends can still join with this code.' : 'You are in game '+NET.code+' as '+(me?me.col.name:'a player')+'.';
+    onlineInfo.textContent = NET.mode==='host' ? 'You are hosting game '+NET.code+'. Friends can still join with this code.' : 'You are in game '+NET.code+' as '+(me?dn(me):'a player')+'.';
     renderLobby();
   }
   showPanel(which);
   modesCancel.hidden = !(which==='main' && NET.mode==='solo' && started);
   modesEl.hidden=false;
-  const f = which==='join' ? joinCode : modesEl.querySelector('#'+panels[which].id+' button:not([disabled])');
+  const f = which==='join' ? joinCode : (which==='main' && !cleanName(document.getElementById('nameInput').value)) ? document.getElementById('nameInput') : modesEl.querySelector('#'+panels[which].id+' button:not([disabled])');
   if(f) setTimeout(()=>f.focus(),0);
 }
 function closeModes(){ modesEl.hidden=true; canvas.focus(); }
 function renderLobby(){
   const items=players.slice().sort((a,b)=>a.i-b.i).map(p=>{
     const tags=[]; if(p.i===0) tags.push('host'); if(p===me) tags.push('you');
-    return '<li><span class="dot" style="background:'+p.col.body+'"></span>'+p.col.name+(tags.length?' ('+tags.join(', ')+')':'')+'</li>';
+    return '<li><span class="dot" style="background:'+p.col.body+'"></span>'+esc(dn(p))+(tags.length?' ('+tags.join(', ')+')':'')+'</li>';
   }).join('');
   lobbyEl.innerHTML=items; lobby2El.innerHTML=items;
 }
 function syncNetInfo(){
   let t='';
   if(NET.mode==='host') t='Online: hosting game '+NET.code+', '+players.length+' player'+(players.length===1?'':'s');
-  else if(NET.mode==='client') t=NET.joined?('Online: game '+NET.code+' as '+(me?me.col.name:'...')+', '+players.length+' players'):'Connecting...';
+  else if(NET.mode==='client') t=NET.joined?('Online: game '+NET.code+' as '+(me?dn(me):'...')+', '+players.length+' players'):'Connecting...';
   if(netinfoEl.textContent!==t){ netinfoEl.textContent=t; netinfoEl.hidden=!t; }
   document.getElementById('stage').classList.toggle('client-only-hide', NET.mode==='client');
 }
@@ -1727,7 +1737,7 @@ function onHostConn(conn){
     players.push(p); players.sort((a,b)=>a.i-b.i);
     NET.conns.push(conn);
     try{ conn.send({t:'welcome', slot, code:NET.code}); }catch(e){}
-    showMsg(p.col.name+' joined the game.');
+    p.helloT=setTimeout(()=>{ if(players.includes(p)&&!p.name){ showMsg(dn(p)+' joined the game.'); renderLobby(); } },3000);
     renderLobby();
     conn.on('data',d=>onHostData(p,d));
     conn.on('close',()=>dropRemote(p));
@@ -1738,11 +1748,20 @@ function dropRemote(p){
   if(!players.includes(p)) return;
   players=players.filter(q=>q!==p); NET.conns=NET.conns.filter(c=>c!==p.conn);
   for(const z of zombies) if(z.aggro===p) z.aggro=null;
-  showMsg(p.col.name+' left the game.');
+  clearTimeout(p.helloT);
+  showMsg(dn(p)+' left the game.');
   renderLobby();
 }
 function onHostData(p,d){
   if(!d||typeof d!=='object'||!players.includes(p)) return;
+  if(d.t==='hello'){
+    if(p.name) return;
+    let nm=cleanName(d.name)||p.col.name, base=nm, k=2;
+    while(players.some(q=>q!==p && dn(q).toLowerCase()===nm.toLowerCase())){ nm=base.slice(0,10)+' '+k; k++; }
+    p.name=nm; clearTimeout(p.helloT);
+    showMsg(nm+' joined the game.'); renderLobby();
+    return;
+  }
   if(d.t==='st'){
     if((d.tp|0)!==p.tp || p.down>0) return;
     const sc=(d.scene==='house'||d.scene==='shop')?d.scene:'world';
@@ -1759,7 +1778,7 @@ const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
 function npcState(n){ const left=n.sayUntil-performance.now(); return [r1(n.x),r1(n.y),r2(n.fx||0),r2(n.fy==null?1:n.fy),n.moving?1:0,r2(n.t||0),left>0?n.say:'',left>0?Math.round(left):0]; }
 function snapshot(){
   return {t:'snap', st:NET.started?1:0,
-    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0]),
+    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'']),
     z:zombies.map(z=>[z.id,z.level,r1(z.x),r1(z.y),r2(z.fx),r2(z.fy),r2(z.hp),r2(z.hitT),r2(z.atkT),z.inWater?1:0,z.shooting?1:0,r2(z.t),z.aggro?1:0,z.reached?1:0,r2(z.atkCD)]),
     ar:arrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy)]),
     dr:drops.map(c=>[r1(c.x),r1(c.y),c.value,r2(c.t)]),
@@ -1802,6 +1821,7 @@ function joinGame(raw){
     if(NET.peer!==peer) return;
     const conn=peer.connect(peerId(code),{reliable:true,serialization:'json'});
     NET.conn=conn;
+    conn.on('open',()=>{ try{ conn.send({t:'hello', name:myName}); }catch(e){} });
     conn.on('data',d=>{ if(NET.peer===peer) onClientData(d); });
     conn.on('close',()=>fail('The host closed the game.'));
     conn.on('error',()=>fail('The connection to the host was lost.'));
@@ -1824,7 +1844,8 @@ function onClientData(d){
   if(!d||typeof d!=='object') return;
   if(d.t==='welcome'){
     NET.slot=d.slot|0; NET.joined=true; NET.code=d.code||NET.code;
-    joinStatus.textContent='Connected as '+PCOLORS[NET.slot].name+'. Waiting for the host to start…';
+    try{ if(NET.conn) NET.conn.send({t:'hello', name:myName}); }catch(e){}
+    joinStatus.textContent='Connected as '+myName+'. Waiting for the host to start…';
   } else if(d.t==='full'){
     joinStatus.textContent='That game is full (4 players).';
     leaveOnline(); startSolo2();
@@ -1837,14 +1858,14 @@ function rebuildWalls(){
 function applySnap(d){
   const wasStarted=NET.started;
   NET.started=!!d.st;
-  if(NET.started && !wasStarted && !modesEl.hidden && (panels.join.hidden===false)){ started=true; closeModes(); showMsg('You joined as '+PCOLORS[NET.slot].name+'. Good luck!'); }
+  if(NET.started && !wasStarted && !modesEl.hidden && (panels.join.hidden===false)){ started=true; closeModes(); showMsg('You joined as '+(me?dn(me):myName)+'. Good luck!'); }
   const seen=new Set();
   for(const a of d.pl){
-    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push]=a;
+    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm]=a;
     seen.add(slot);
     let p=players.find(q=>q.i===slot);
     if(!p){ p=makePlayer(slot); p.tp=-1; p.x=x; p.y=y; players.push(p); players.sort((u,v)=>u.i-v.i); }
-    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt;
+    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.name=cleanName(nm);
     if(slot===NET.slot){
       if(me!==p){ me=p; p.view={x:0,y:0,w:CW,h:CH}; }
       if(tp!==p.tp){
@@ -1914,9 +1935,23 @@ function clientUpdate(dt){
 }
 
 /* ---------- menu wiring ---------- */
-document.getElementById('mSolo').addEventListener('click',()=>{ mainStatus.textContent=''; startSolo(); });
-document.getElementById('mHost').addEventListener('click',()=>{ mainStatus.textContent=''; hostGame(); });
-document.getElementById('mJoin').addEventListener('click',()=>{ mainStatus.textContent=''; joinStatus.textContent=''; openModes('join'); });
+const nameInput=document.getElementById('nameInput');
+nameInput.value=myName;
+function needName(){
+  const nm=cleanName(nameInput.value);
+  nameInput.value=nm;
+  if(!nm){ mainStatus.textContent='Enter a username first.'; nameInput.classList.add('bad'); nameInput.focus(); return false; }
+  nameInput.classList.remove('bad');
+  myName=nm; try{ localStorage.setItem('vd-username',nm); }catch(e){}
+  if(me && NET.mode!=='client') me.name=nm;
+  mainStatus.textContent='';
+  return true;
+}
+nameInput.addEventListener('input',()=>{ nameInput.classList.remove('bad'); if(mainStatus.textContent==='Enter a username first.') mainStatus.textContent=''; });
+nameInput.addEventListener('keydown',e=>{ if(e.key==='Enter'){ e.preventDefault(); if(needName()) startSolo(); } });
+document.getElementById('mSolo').addEventListener('click',()=>{ if(needName()) startSolo(); });
+document.getElementById('mHost').addEventListener('click',()=>{ if(needName()) hostGame(); });
+document.getElementById('mJoin').addEventListener('click',()=>{ if(!needName()) return; joinStatus.textContent=''; openModes('join'); });
 startBtn.addEventListener('click',hostStart);
 document.getElementById('joinForm').addEventListener('submit',e=>{ e.preventDefault(); joinGame(joinCode.value); });
 joinCode.addEventListener('input',()=>{ joinCode.value=joinCode.value.toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); });
@@ -1942,13 +1977,13 @@ const DIR_ID='village-defense-v1-directory';
 const PRES={sid:Math.random().toString(36).slice(2,12), peer:null, role:'none', dirConn:null, entries:new Map(), retry:0, listCb:null, listTimer:0, starting:false};
 function myInfo(){
   return {mode:NET.mode, code:(NET.mode==='solo'?'':NET.code)||'', started:(NET.mode==='solo'?started:NET.started)?1:0, menu:modesEl.hidden?0:1,
-    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid};
+    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid, name:myName, names:NET.mode==='host'?players.map(dn):[]};
 }
 function cleanInfo(i){
   if(!i||typeof i!=='object') return null;
   const n=(v,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(+v||0)));
   return {mode:['solo','host','client'].includes(i.mode)?i.mode:'solo', code:String(i.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),
-    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12)};
+    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12), name:cleanName(i.name), names:Array.isArray(i.names)?i.names.slice(0,4).map(cleanName).filter(Boolean):[]};
 }
 function presReset(ms){
   const p=PRES.peer; PRES.peer=null; PRES.dirConn=null; PRES.role='none'; PRES.starting=false; PRES.entries.clear();
@@ -2043,14 +2078,14 @@ function refreshWatch(){
       else if(g.done) status='All '+g.waves+' waves cleared';
       else status=(g.wave?'Wave '+g.wave+' of '+g.waves:'Before wave 1')+', core '+g.core+'/100';
       const canJoin=!isMine && !g.unknown && g.players<4;
-      return '<li><div class="wmain"><b>Online game <span class="wcode">'+esc(g.code)+'</span>'+(isMine?' (yours)':'')+'</b><span>'+g.players+' player'+(g.players===1?'':'s')+'. '+esc(status)+'</span></div>'+(canJoin?'<button type="button" class="wjoin" data-code="'+esc(g.code)+'">Join</button>':'')+'</li>';
+      return '<li><div class="wmain"><b>Online game <span class="wcode">'+esc(g.code)+'</span>'+(isMine?' (yours)':'')+'</b><span>'+(g.names&&g.names.length?esc(g.names.join(', ')):g.players+' player'+(g.players===1?'':'s'))+'. '+esc(status)+'</span></div>'+(canJoin?'<button type="button" class="wjoin" data-code="'+esc(g.code)+'">Join</button>':'')+'</li>';
     });
     const soloRows=solos.map(it=>{
       let status;
       if(!it.started) status='In the menu';
       else if(it.done) status='Cleared all '+it.waves+' waves';
       else status=(it.wave?'Wave '+it.wave+' of '+it.waves:'Before wave 1')+', core '+it.core+'/100';
-      return '<li><div class="wmain"><b>Solo player'+(it.sid===PRES.sid?' (you)':'')+'</b><span>'+esc(status)+'</span></div></li>';
+      return '<li><div class="wmain"><b>'+esc((it.sid===PRES.sid?myName:it.name)||'Solo player')+(it.sid===PRES.sid?' (you)':'')+'</b><span>'+esc(status)+'</span></div></li>';
     });
     watchSummary.textContent=people+' '+(people===1?'person has':'people have')+' the game open: '+games.size+' online game'+(games.size===1?'':'s')+' and '+solos.length+' on their own. Updates every few seconds.';
     watchList.innerHTML=gameRows.join('')+soloRows.join('') || '<li>No one else is playing right now.</li>';
