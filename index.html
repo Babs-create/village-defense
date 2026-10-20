@@ -108,6 +108,13 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #modes .code{font-size:52px;font-weight:600;letter-spacing:.18em;text-align:center;padding:10px 0 6px;color:var(--ink);font-variant-numeric:tabular-nums;}
 #modes .lobby{list-style:none;margin:10px 0;padding:0;display:flex;flex-direction:column;gap:6px;}
 #modes .lobby li{display:flex;align-items:center;gap:8px;font-size:15px;padding:6px 10px;border:1px solid var(--edge);border-radius:8px;}
+#modes .watch li{flex-wrap:wrap;}
+#modes .watch .wmain{flex:1;min-width:160px;display:flex;flex-direction:column;gap:1px;}
+#modes .watch .wmain b{font-weight:600;font-size:15px;}
+#modes .watch .wmain span{font-size:13px;color:var(--ink2);}
+#modes .watch .wjoin{font:inherit;font-size:14px;font-weight:600;padding:6px 14px;border-radius:8px;cursor:pointer;background:#FAC775;color:#412402;border:2px solid #854F0B;}
+#modes .watch .wjoin:hover{background:#EF9F27;}
+#modes .watch .wcode{font-weight:600;letter-spacing:.12em;}
 #modes .primary{width:100%;font:inherit;font-size:17px;font-weight:600;padding:11px;border-radius:10px;cursor:pointer;background:#FAC775;color:#412402;border:2px solid #854F0B;margin-top:6px;}
 #modes .primary:hover{background:#EF9F27;}
 #modes .primary:disabled{opacity:.5;cursor:default;}
@@ -185,6 +192,12 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
       <form id="joinForm"><input id="joinCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="ABCD" aria-label="Game code"><button type="submit" class="primary">Join</button></form>
       <p id="joinStatus" class="note" aria-live="polite"></p>
       <button type="button" class="back" data-back>Back</button>
+    </div>
+    <div id="mWatchPanel" hidden>
+      <p class="sub">Everyone playing right now</p>
+      <p id="watchSummary" class="note" aria-live="polite">Looking for players&hellip;</p>
+      <ul id="watchList" class="lobby watch"></ul>
+      <button type="button" id="mWatchBack" class="back">Back</button>
     </div>
     <div id="mOnlinePanel" hidden>
       <p class="sub" id="onlineInfo"></p>
@@ -566,7 +579,7 @@ act3Btn.addEventListener('click',()=>{ if(action3) action3.run(); canvas.focus()
 function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=10, MAX_HP=5;
-const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6}];
+const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6},{count:1,level:2}];
 const ZLEVEL={
   1:{hp:3,speed:85,coreDmg:5,reward:5,r:14,scale:1,arm:'#639922',shirt:'#5F5E5A',patch:'#888780',skin:'#97C459',skinEdge:'#3B6D11'},
   2:{hp:5,speed:85,coreDmg:10,reward:10,r:17,scale:1.25,arm:'#3B6D11',shirt:'#2C2C2A',patch:'#712B13',skin:'#639922',skinEdge:'#173404'},
@@ -1616,7 +1629,7 @@ resetBtn.addEventListener('click',()=>{
 });
 
 const modesEl=document.getElementById('modes'), modesCancel=document.getElementById('modesCancel');
-const panels={main:document.getElementById('mMain'), host:document.getElementById('mHostPanel'), join:document.getElementById('mJoinPanel'), online:document.getElementById('mOnlinePanel')};
+const panels={main:document.getElementById('mMain'), host:document.getElementById('mHostPanel'), join:document.getElementById('mJoinPanel'), online:document.getElementById('mOnlinePanel'), watch:document.getElementById('mWatchPanel')};
 const codeBox=document.getElementById('codeBox'), hostStatus=document.getElementById('hostStatus'), lobbyEl=document.getElementById('lobby'), lobby2El=document.getElementById('lobby2');
 const startBtn=document.getElementById('mStart'), joinStatus=document.getElementById('joinStatus'), joinCode=document.getElementById('joinCode');
 const mainStatus=document.getElementById('mainStatus'), onlineInfo=document.getElementById('onlineInfo'), netinfoEl=document.getElementById('netinfo');
@@ -1653,7 +1666,8 @@ function syncNetInfo(){
 }
 
 const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-function newCode(){ let c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; return c; }
+const SECRET_CODE='ZBJO';
+function newCode(){ let c; do{ c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; }while(c===SECRET_CODE); return c; }
 function peerId(code){ return 'village-defense-v1-'+code.toLowerCase(); }
 function PeerClass(){ return window.VD_FAKE_PEER || window.Peer; }
 function netSend(m){ try{ if(NET.conn && NET.conn.open!==false) NET.conn.send(m); }catch(e){} }
@@ -1772,6 +1786,7 @@ function hostStart(){
 /* ---------- joining ---------- */
 function joinGame(raw){
   const code=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(code===SECRET_CODE){ joinCode.value=''; joinStatus.textContent=''; openWatch(); return; }
   if(code.length!==4){ joinStatus.textContent='Codes are 4 letters or numbers.'; return; }
   leaveOnline();
   const P=PeerClass();
@@ -1913,12 +1928,144 @@ document.getElementById('mResume').addEventListener('click',closeModes);
 document.getElementById('mLeave').addEventListener('click',()=>{ leaveOnline(); startSolo2(); started=false; overEl.hidden=true; mainStatus.textContent='You left the online game.'; openModes('main'); });
 modesCancel.addEventListener('click',closeModes);
 document.getElementById('playersBtn').addEventListener('click',()=>openModes());
-window.addEventListener('beforeunload',()=>{ if(NET.peer){ try{ NET.peer.destroy(); }catch(e){} } });
+window.addEventListener('beforeunload',()=>{ if(NET.peer){ try{ NET.peer.destroy(); }catch(e){} } if(PRES.peer){ try{ PRES.peer.destroy(); }catch(e){} } });
 
 buildWalk();
 resetPlayers();
 requestAnimationFrame(frame);
+
+/* ---------- live player list (secret code ZBJO) ----------
+   Every open copy of the game reports its status to one shared "directory".
+   The first copy to claim the directory ID becomes the directory; when it closes,
+   the others race to take over and report again. */
+const DIR_ID='village-defense-v1-directory';
+const PRES={sid:Math.random().toString(36).slice(2,12), peer:null, role:'none', dirConn:null, entries:new Map(), retry:0, listCb:null, listTimer:0, starting:false};
+function myInfo(){
+  return {mode:NET.mode, code:(NET.mode==='solo'?'':NET.code)||'', started:(NET.mode==='solo'?started:NET.started)?1:0, menu:modesEl.hidden?0:1,
+    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid};
+}
+function cleanInfo(i){
+  if(!i||typeof i!=='object') return null;
+  const n=(v,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(+v||0)));
+  return {mode:['solo','host','client'].includes(i.mode)?i.mode:'solo', code:String(i.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),
+    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12)};
+}
+function presReset(ms){
+  const p=PRES.peer; PRES.peer=null; PRES.dirConn=null; PRES.role='none'; PRES.starting=false; PRES.entries.clear();
+  if(p){ try{ p.destroy(); }catch(e){} }
+  clearTimeout(PRES.retry); PRES.retry=setTimeout(presStart, ms);
+}
+function presStart(){
+  if(PRES.peer||PRES.starting) return;
+  const P=PeerClass(); if(!P) return;
+  PRES.starting=true;
+  let peer; try{ peer=new P(DIR_ID,{debug:0}); }catch(e){ PRES.starting=false; return; }
+  PRES.peer=peer;
+  peer.on('open',()=>{ if(PRES.peer!==peer) return; PRES.starting=false; PRES.role='dir'; PRES.entries.clear(); });
+  peer.on('connection',conn=>{
+    if(PRES.peer!==peer) return;
+    conn.on('data',d=>{
+      if(PRES.peer!==peer||!d||typeof d!=='object') return;
+      if(d.t==='info'){ const info=cleanInfo(d.info); if(info) PRES.entries.set(conn,{info,last:performance.now()}); }
+      else if(d.t==='list'){ try{ conn.send({t:'list', items:dirList()}); }catch(e){} }
+    });
+    conn.on('close',()=>PRES.entries.delete(conn));
+    conn.on('error',()=>PRES.entries.delete(conn));
+  });
+  peer.on('error',err=>{
+    if(PRES.peer!==peer) return;
+    const type=err&&err.type;
+    if(type==='unavailable-id' && PRES.role!=='dir'){ try{ peer.destroy(); }catch(e){} PRES.peer=null; presJoinDir(); return; }
+    if(type==='peer-unavailable') return;
+    presReset(10000);
+  });
+  peer.on('disconnected',()=>{ if(PRES.peer===peer){ try{ peer.reconnect(); }catch(e){} } });
+}
+function presJoinDir(){
+  const P=PeerClass(); let peer;
+  try{ peer=new P({debug:0}); }catch(e){ PRES.starting=false; return; }
+  PRES.peer=peer; PRES.role='member';
+  peer.on('open',()=>{
+    if(PRES.peer!==peer) return;
+    PRES.starting=false;
+    const conn=peer.connect(DIR_ID,{reliable:true,serialization:'json'});
+    PRES.dirConn=conn;
+    conn.on('open',()=>{ try{ conn.send({t:'info', info:myInfo()}); }catch(e){} });
+    conn.on('data',d=>{ if(d&&d.t==='list'&&PRES.listCb){ const cb=PRES.listCb; PRES.listCb=null; clearTimeout(PRES.listTimer); cb((d.items||[]).map(cleanInfo).filter(Boolean)); } });
+    conn.on('close',()=>{ if(PRES.dirConn===conn) presReset(400+Math.random()*2000); });
+    conn.on('error',()=>{ if(PRES.dirConn===conn) presReset(800+Math.random()*2000); });
+  });
+  peer.on('error',err=>{
+    if(PRES.peer!==peer) return;
+    const type=err&&err.type;
+    presReset(type==='peer-unavailable' ? 300+Math.random()*1500 : 10000);
+  });
+  peer.on('disconnected',()=>{ if(PRES.peer===peer){ try{ peer.reconnect(); }catch(e){} } });
+}
+function dirList(){
+  const items=[Object.assign(myInfo(),{dir:1})];
+  for(const e of PRES.entries.values()) items.push(e.info);
+  return items;
+}
+function requestList(cb){
+  if(PRES.role==='dir'){ cb(dirList().map(cleanInfo)); return; }
+  if(PRES.role==='member' && PRES.dirConn && PRES.dirConn.open!==false){
+    PRES.listCb=cb; clearTimeout(PRES.listTimer);
+    PRES.listTimer=setTimeout(()=>{ if(PRES.listCb===cb){ PRES.listCb=null; cb(null); } },3500);
+    try{ PRES.dirConn.send({t:'list'}); }catch(e){ PRES.listCb=null; cb(null); }
+    return;
+  }
+  presStart();
+  cb(undefined);
+}
+const watchSummary=document.getElementById('watchSummary'), watchList=document.getElementById('watchList');
+function openWatch(){ openModes('watch'); watchSummary.textContent='Looking for players…'; watchList.innerHTML=''; refreshWatch(); }
+function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
+function refreshWatch(){
+  requestList(items=>{
+    if(panels.watch.hidden||modesEl.hidden) return;
+    if(items===undefined){ watchSummary.textContent='Connecting to the player list…'; return; }
+    if(items===null){ watchSummary.textContent='Could not reach the player list. Check your internet connection.'; watchList.innerHTML=''; return; }
+    const mine=myInfo();
+    const games=new Map(), solos=[], clientsByCode=new Map();
+    for(const it of items){
+      if(it.mode==='host' && it.code) games.set(it.code,it);
+      else if(it.mode==='client' && it.code){ clientsByCode.set(it.code,(clientsByCode.get(it.code)||0)+1); }
+      else solos.push(it);
+    }
+    for(const [code,n] of clientsByCode) if(!games.has(code)) games.set(code,{mode:'host',code,players:n,started:1,wave:0,waves:WAVES.length,core:0,unknown:1});
+    let people=solos.length; for(const g of games.values()) people+=g.players;
+    const gameRows=[...games.values()].sort((a,b)=>b.players-a.players).map(g=>{
+      const isMine = (mine.mode==='host'&&mine.code===g.code) || (mine.mode==='client'&&mine.code===g.code);
+      let status;
+      if(g.unknown) status='Host is not reporting';
+      else if(!g.started) status='Waiting for the host to start';
+      else if(g.done) status='All '+g.waves+' waves cleared';
+      else status=(g.wave?'Wave '+g.wave+' of '+g.waves:'Before wave 1')+', core '+g.core+'/100';
+      const canJoin=!isMine && !g.unknown && g.players<4;
+      return '<li><div class="wmain"><b>Online game <span class="wcode">'+esc(g.code)+'</span>'+(isMine?' (yours)':'')+'</b><span>'+g.players+' player'+(g.players===1?'':'s')+'. '+esc(status)+'</span></div>'+(canJoin?'<button type="button" class="wjoin" data-code="'+esc(g.code)+'">Join</button>':'')+'</li>';
+    });
+    const soloRows=solos.map(it=>{
+      let status;
+      if(!it.started) status='In the menu';
+      else if(it.done) status='Cleared all '+it.waves+' waves';
+      else status=(it.wave?'Wave '+it.wave+' of '+it.waves:'Before wave 1')+', core '+it.core+'/100';
+      return '<li><div class="wmain"><b>Solo player'+(it.sid===PRES.sid?' (you)':'')+'</b><span>'+esc(status)+'</span></div></li>';
+    });
+    watchSummary.textContent=people+' '+(people===1?'person has':'people have')+' the game open: '+games.size+' online game'+(games.size===1?'':'s')+' and '+solos.length+' on their own. Updates every few seconds.';
+    watchList.innerHTML=gameRows.join('')+soloRows.join('') || '<li>No one else is playing right now.</li>';
+  });
+}
+watchList.addEventListener('click',e=>{ const b=e.target.closest('button[data-code]'); if(b){ openModes('join'); joinCode.value=b.dataset.code; joinGame(b.dataset.code); } });
+document.getElementById('mWatchBack').addEventListener('click',()=>openModes('join'));
+setInterval(()=>{
+  if(PRES.role==='member' && PRES.dirConn && PRES.dirConn.open!==false){ try{ PRES.dirConn.send({t:'info', info:myInfo()}); }catch(e){} }
+  if(PRES.role==='dir'){ const now=performance.now(); for(const [c,e] of PRES.entries) if(now-e.last>15000) PRES.entries.delete(c); }
+  if(!modesEl.hidden && !panels.watch.hidden) refreshWatch();
+},2500);
+
 openModes('main');
+setTimeout(presStart, 300);
 if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,set:(k,v)=>{ if(k==='coins') coins=v; }});
 })();
 </script>
