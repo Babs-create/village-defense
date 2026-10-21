@@ -59,6 +59,31 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #bmenu,#smenu{position:absolute;left:50%;bottom:194px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
   border:2px solid #A32D2D;border-radius:12px;padding:12px 14px;width:min(320px, calc(100% - 32px));box-sizing:border-box;}
 #bmenu[hidden],#smenu[hidden]{display:none;}
+#pmenu{position:absolute;left:50%;bottom:136px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
+  border:2px solid #3B6D11;border-radius:12px;padding:12px 14px;width:min(320px, calc(100% - 32px));box-sizing:border-box;}
+#pmenu[hidden]{display:none;}
+#pmenu h3{margin:0 0 8px;font-size:17px;font-weight:600;}
+#pmenu .grid{display:grid;grid-template-columns:1fr;gap:8px;}
+#pmenu button{font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:9px 8px;border-radius:8px;cursor:pointer;background:#C0DD97;color:#173404;border:2px solid #3B6D11;}
+#pmenu button:hover:not(:disabled){background:#97C459;}
+#pmenu button:disabled{background:transparent;color:var(--ink2);border-style:dashed;border-color:var(--edge);cursor:default;}
+#pmenu button:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#pmenu .cancel{margin-top:8px;width:100%;background:transparent;color:var(--ink);border-color:var(--edge);}
+#cmenu{position:absolute;left:50%;bottom:136px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
+  border:2px solid #854F0B;border-radius:12px;padding:12px 14px;width:min(320px, calc(100% - 32px));box-sizing:border-box;}
+#cmenu[hidden]{display:none;}
+#cmenu h3{margin:0 0 4px;font-size:17px;font-weight:600;}
+#cmenu p{margin:0 0 8px;font-size:13px;color:var(--ink2);}
+#cmenu form{display:flex;gap:8px;}
+#chestCode{flex:1;min-width:0;font:600 24px "Pixelify Sans", ui-rounded, system-ui, sans-serif;letter-spacing:.2em;text-transform:uppercase;text-align:center;padding:4px 6px;border-radius:8px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
+#chestCode:focus-visible,#cmenu button:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#cmenu button{font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:8px 14px;border-radius:8px;cursor:pointer;background:#FAC775;color:#412402;border:2px solid #854F0B;}
+#cmenu button:hover{background:#EF9F27;}
+#cmenu .cancel{margin-top:8px;width:100%;background:transparent;color:var(--ink);border-color:var(--edge);}
+#chestStatus{margin:8px 0 0 !important;font-size:14px !important;color:#A32D2D !important;}
+#chestStatus:empty{display:none;}
+#ticket{color:#854F0B;font-weight:600;}
+#ticket[hidden]{display:none;}
 #bmenu h3,#smenu h3{margin:0 0 8px;font-size:17px;font-weight:600;}
 #bmenu .grid,#smenu .grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
 #bmenu button,#smenu button{font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:9px 8px;border-radius:8px;cursor:pointer;
@@ -144,7 +169,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <h1>Village Defense</h1>
     <p id="hint">Move with WASD or the arrow keys.</p>
     <p id="zone">Inside the village</p>
-    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="weapon">Weapon: Wooden sword</span></p>
+    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="weapon">Weapon: Wooden sword</span><span id="ticket" hidden>Ticket: 50% off at the shop</span></p>
     <p id="netinfo" hidden></p>
     <p id="threat" aria-live="polite"></p>
     <p id="msg" aria-live="polite"></p>
@@ -160,6 +185,22 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
       <button type="button" data-w="iron">Iron sword</button>
     </div>
     <button type="button" class="cancel">Cancel</button>
+  </div>
+  <div id="pmenu" class="menu" hidden role="dialog" aria-label="Choose a pet to buy">
+    <h3>Pets for sale</h3>
+    <div class="grid">
+      <button type="button" data-pet="bird">Bird</button>
+      <button type="button" data-pet="cat">Cat</button>
+      <button type="button" data-pet="dog">Dog</button>
+    </div>
+    <button type="button" class="cancel" id="petCancel">Cancel</button>
+  </div>
+  <div id="cmenu" class="menu" hidden role="dialog" aria-label="Code lock">
+    <h3 id="codeTitle">The chest has a code lock</h3>
+    <p id="codeSub">Type the 4-character code.</p>
+    <form id="chestForm"><input id="chestCode" maxlength="4" autocomplete="off" autocapitalize="characters" spellcheck="false" placeholder="····" aria-label="Chest code"><button type="submit">Open</button></form>
+    <p id="chestStatus" aria-live="polite"></p>
+    <button type="button" class="cancel" id="chestCancel">Cancel</button>
   </div>
   <div id="bmenu" class="menu" hidden role="dialog" aria-label="Choose a bridge to destroy">
     <h3>Destroy which bridge? (100 coins)</h3>
@@ -355,7 +396,7 @@ const interiors={
       {k:'barrel',x:96,y:340,w:46,h:46},{k:'barrel',x:150,y:356,w:40,h:40},
       {k:'crate',x:560,y:336,w:56,h:56},{k:'crate',x:620,y:350,w:40,h:40}
     ], rug:{x:290,y:270,w:140,h:70,c:'#185FA5',e:'#85B7EB'},
-    npc:{name:'Shopkeeper', x:360, y:110, r:14, greet:()=>weapon!=='iron'?'Walls 10, swords 100 and 200, bridges 100.':(bridges.some(b=>b.intact)?'Walls are 10 coins. I can wreck a bridge for 100.':'Walls are 10 coins each.'), say:'', sayUntil:0,
+    npc:{name:'Shopkeeper', x:360, y:110, r:14, greet:()=>me&&me.petShop?(me.ticket?'Half price with your ticket! ':'')+'Pets only now! Bird '+price(100)+', cat '+price(200)+', dog '+price(300)+'.':(me&&me.ticket?'Half price with your ticket! ':'')+(weapon!=='iron'?'Walls '+price(10)+', swords '+price(100)+' and '+price(200)+', bridges '+price(100)+'.':(bridges.some(b=>b.intact)?'Walls are '+price(10)+' coins. I can wreck a bridge for '+price(100)+'.':'Walls are '+price(10)+' coins each.')), say:'', sayUntil:0,
       look:{body:'#854F0B', outline:'#412402', trim:'#3B6D11', skin:'#F0997B', hair:'#D3D1C7', mustache:'#B4B2A9'}}}
 };
 
@@ -407,8 +448,9 @@ function camTarget(p){
   return [tx,ty];
 }
 
-let coins=50, wallInv=0, action=null, action2=null, msgTimer=0;
-const WALL_COST=10;
+let coins=50, wallInv=0, action=null, action2=null, msgTimer=0, chestTaken=false;
+const WALL_COST=10, CHEST_CODE='1B7J';
+function price(base,p){ if(p===undefined) p=me; return (p&&p.ticket) ? Math.ceil(base/2) : base; }
 const slots=[];
 for(let i=0;i<4;i++){
   const sh=VIL.h/4, sw=VIL.w/4;
@@ -426,6 +468,7 @@ function say(n,text){ n.say=text; n.sayUntil=performance.now()+2500; }
 function showMsg(text){ NET.msgId++; NET.msgText=text; msgEl.textContent=text; clearTimeout(msgTimer); msgTimer=setTimeout(()=>{msgEl.textContent='';},3000); }
 const bmenu=document.getElementById('bmenu');
 function syncBridgeMenu(){
+  const bh=bmenu.querySelector('h3'); if(bh) bh.textContent='Destroy which bridge? ('+price(BRIDGE_COST)+' coins)';
   for(const btn of bmenu.querySelectorAll('button[data-b]')){
     const br=bridges.find(q=>q.id===btn.dataset.b);
     btn.disabled=!br.intact;
@@ -439,25 +482,27 @@ function openBridgeMenu(){
   const first=bmenu.querySelector('button[data-b]:not(:disabled)'); if(first) first.focus();
 }
 function closeBridgeMenu(){ if(!bmenu.hidden){ bmenu.hidden=true; canvas.focus(); } }
-function destroyBridge(id){
+function destroyBridge(id,p){
   const n=interiors.shop.npc, br=bridges.find(q=>q.id===id);
   if(!br||!br.intact) return;
-  if(coins<BRIDGE_COST){ say(n,'You need 100 coins to wreck a bridge.'); closeBridgeMenu(); return; }
-  coins-=BRIDGE_COST; br.intact=false;
+  const cost=price(BRIDGE_COST,p);
+  if(coins<cost){ say(n,'You need '+cost+' coins to wreck a bridge.'); closeBridgeMenu(); return; }
+  coins-=cost; br.intact=false;
   buildWalk(); buildMini();
   say(n,'Done. The '+br.name.toLowerCase()+' bridge is gone!');
   showMsg('The '+br.name.toLowerCase()+' bridge is destroyed. Zombies must swim across there.');
   closeBridgeMenu();
 }
-function pickBridge(id){ if(NET.mode==='client'){ netSend({t:'bridge',id}); closeBridgeMenu(); } else destroyBridge(id); }
+function pickBridge(id){ if(NET.mode==='client'){ netSend({t:'bridge',id}); closeBridgeMenu(); } else destroyBridge(id,me); }
 bmenu.addEventListener('click',e=>{
   const t=e.target.closest('button'); if(!t) return;
   if(t.dataset.b) pickBridge(t.dataset.b); else closeBridgeMenu();
 });
-function buyWall(){
+function buyWall(p){
   const n=interiors.shop.npc;
-  if(coins<WALL_COST){ say(n,'You need 10 coins for a wall.'); return; }
-  coins-=WALL_COST; wallInv++;
+  const cost=price(WALL_COST,p);
+  if(coins<cost){ say(n,'You need '+cost+' coins for a wall.'); return; }
+  coins-=cost; wallInv++;
   say(n,'Thanks! Set it on the village edge.');
 }
 function placeWall(sl){
@@ -480,9 +525,9 @@ function placeWall(sl){
   showMsg(left ? `Wall placed. ${left} open spots left.` : 'Every side of the village is walled.');
 }
 const WEAPONS={
-  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,5:11,6:13,s1:3}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
-  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,5:10,6:12,s1:2}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
-  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,5:9,6:11,s1:1}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
+  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,5:11,6:13,7:15,8:17,9:19,s1:3,s2:5,s3:7}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
+  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,5:10,6:12,7:14,8:16,9:18,s1:2,s2:4,s3:6}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
+  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,5:9,6:11,7:13,8:15,9:17,s1:1,s2:3,s3:5}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
 };
 let weapon='wood';
 const act3Btn=document.getElementById('act3'), weaponEl=document.getElementById('weapon');
@@ -491,7 +536,7 @@ function syncSwordMenu(){
   for(const btn of smenu.querySelectorAll('button[data-w]')){
     const W0=WEAPONS[btn.dataset.w], owned=W0.rank<=WEAPONS[weapon].rank;
     btn.disabled=owned;
-    btn.textContent=W0.name+(owned?(weapon===btn.dataset.w?' (owned)':' (have better)'):' - '+W0.cost);
+    btn.textContent=W0.name+(owned?(weapon===btn.dataset.w?' (owned)':' (have better)'):' - '+price(W0.cost));
   }
 }
 function openSwordMenu(){
@@ -500,16 +545,17 @@ function openSwordMenu(){
   const first=smenu.querySelector('button[data-w]:not(:disabled)'); if(first) first.focus();
 }
 function closeSwordMenu(){ if(!smenu.hidden){ smenu.hidden=true; canvas.focus(); } }
-function buySword(id){
+function buySword(id,p){
   const n=interiors.shop.npc, W0=WEAPONS[id];
   if(!W0||W0.rank<=WEAPONS[weapon].rank) return;
-  if(coins<W0.cost){ say(n,'The '+W0.name.toLowerCase()+' is '+W0.cost+' coins.'); closeSwordMenu(); return; }
-  coins-=W0.cost; weapon=id;
+  const cost=price(W0.cost,p);
+  if(coins<cost){ say(n,'The '+W0.name.toLowerCase()+' is '+cost+' coins.'); closeSwordMenu(); return; }
+  coins-=cost; weapon=id;
   say(n,'A fine blade. Swing it well!');
   showMsg('You bought the '+W0.name.toLowerCase()+'. Hits to kill: level 1 '+W0.hits[1]+', level 2 '+W0.hits[2]+', level 3 '+W0.hits[3]+', level 4 '+W0.hits[4]+', level 5 '+W0.hits[5]+', level 6 '+W0.hits[6]+'.');
   closeSwordMenu();
 }
-function pickSword(id){ if(NET.mode==='client'){ netSend({t:'sword',id}); closeSwordMenu(); } else buySword(id); }
+function pickSword(id){ if(NET.mode==='client'){ netSend({t:'sword',id}); closeSwordMenu(); } else buySword(id,me); }
 smenu.addEventListener('click',e=>{
   const t=e.target.closest('button'); if(!t) return;
   if(t.dataset.w) pickSword(t.dataset.w); else closeSwordMenu();
@@ -520,12 +566,135 @@ function nearShop(p){
 }
 function shopPlayer(){ return nearShop(me); }
 function computeAction3(){
-  if(weapon==='iron'||!shopPlayer()) return null;
+  if(weapon==='iron'||!shopPlayer()||me.petShop) return null;
   return {label:'Buy a better sword', run:openSwordMenu};
 }
 function computeAction2(){
-  if(!bridges.some(b=>b.intact)||!shopPlayer()) return null;
-  return {label:'Destroy a bridge for 100 coins', run:openBridgeMenu};
+  if(!bridges.some(b=>b.intact)||!shopPlayer()||me.petShop) return null;
+  return {label:'Destroy a bridge for '+price(BRIDGE_COST)+' coins', run:openBridgeMenu};
+}
+const CHEST=interiors.house.items.find(it=>it.k==='chest');
+const cmenu=document.getElementById('cmenu'), chestCode=document.getElementById('chestCode'), chestStatus=document.getElementById('chestStatus');
+function nearChest(p){ return !!p && !p.down && !p.fadeDir && p.scene==='house' && distRect(p.x,p.y,CHEST)<p.r+40; }
+let codeKind='chest';
+const PLOT=Object.assign({w:100,h:70},plots[1]), PET_CODE='PSZB';
+function nearPlot(p){ return !!p && !p.down && !p.fadeDir && p.scene==='world' && distRect(p.x,p.y,PLOT)<p.r+16; }
+function openPlotMenu(){
+  if(!cmenu.hidden){ closeChestMenu(); return; }
+  codeKind='plot';
+  document.getElementById('codeTitle').textContent='Something is scratched into the dirt';
+  document.getElementById('codeSub').textContent='Type a 4-character code.';
+  closeBridgeMenu(); closeSwordMenu(); closePetMenu(); held.clear();
+  chestCode.value=''; chestStatus.textContent=''; cmenu.hidden=false;
+  setTimeout(()=>chestCode.focus(),0);
+}
+function openChestMenu(){
+  if(!cmenu.hidden){ closeChestMenu(); return; }
+  if(chestTaken){ showMsg(me&&me.ticket?'The chest is empty. You already have the discount ticket.':'The chest is empty. Someone already took the ticket.'); return; }
+  codeKind='chest';
+  document.getElementById('codeTitle').textContent='The chest has a code lock';
+  document.getElementById('codeSub').textContent='Type the 4-character code.';
+  closeBridgeMenu(); closeSwordMenu(); closePetMenu(); held.clear();
+  chestCode.value=''; chestStatus.textContent=''; cmenu.hidden=false;
+  setTimeout(()=>chestCode.focus(),0);
+}
+function closeChestMenu(){ if(!cmenu.hidden){ cmenu.hidden=true; canvas.focus(); } }
+function cleanChestCode(v){ return String(v||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); }
+function claimTicket(p){
+  if(chestTaken||!p) return;
+  chestTaken=true; p.ticket=true;
+  showMsg(online() ? dn(p)+' found the discount ticket in the chest! Only '+dn(p)+' gets 50% off at the shop.' : 'You found a discount ticket in the chest! Everything at the shop is now 50% off.');
+}
+function togglePetShop(p){
+  if(!p||p.petShop) return;
+  p.petShop=true;
+  if(p===me){ closeSwordMenu(); closeBridgeMenu(); closePetMenu(); }
+  const who=online()?dn(p):'';
+  showMsg(who ? who+' unlocked pets! The shop now sells only pets to '+who+', for good.' : 'Pets unlocked! The shop now sells only pets, for good.');
+}
+function tryChest(raw){
+  const code=cleanChestCode(raw);
+  if(codeKind==='plot'){
+    if(code!==PET_CODE){ chestStatus.textContent='Nothing happens.'; chestCode.select(); return; }
+    if(me&&me.petShop){ closeChestMenu(); showMsg('Pets are already unlocked. There is no going back.'); return; }
+    if(NET.mode==='client') netSend({t:'plot', code}); else togglePetShop(me);
+    closeChestMenu(); return;
+  }
+  if(code!==CHEST_CODE){ chestStatus.textContent='Wrong code. The chest stays locked.'; chestCode.select(); return; }
+  if(NET.mode==='client') netSend({t:'chest', code});
+  else claimTicket(me);
+  closeChestMenu();
+}
+document.getElementById('chestForm').addEventListener('submit',e=>{ e.preventDefault(); tryChest(chestCode.value); });
+chestCode.addEventListener('input',()=>{ chestCode.value=cleanChestCode(chestCode.value); chestStatus.textContent=''; });
+document.getElementById('chestCancel').addEventListener('click',closeChestMenu);
+document.getElementById('petCancel').addEventListener('click',()=>closePetMenu());
+const PETS={bird:{name:'Bird',cost:100}, cat:{name:'Cat',cost:200}, dog:{name:'Dog',cost:300}};
+const pmenu=document.getElementById('pmenu');
+function syncPetMenu(){
+  for(const btn of pmenu.querySelectorAll('button[data-pet]')){
+    const P0=PETS[btn.dataset.pet], mine=me&&me.pet===btn.dataset.pet;
+    btn.disabled=mine;
+    btn.textContent=P0.name+(mine?' (yours)':' - '+price(P0.cost));
+  }
+}
+function openPetMenu(){
+  if(!pmenu.hidden){ closePetMenu(); return; }
+  closeBridgeMenu(); closeSwordMenu(); syncPetMenu(); pmenu.hidden=false;
+  const first=pmenu.querySelector('button[data-pet]:not(:disabled)'); if(first) first.focus();
+}
+function closePetMenu(){ if(!pmenu.hidden){ pmenu.hidden=true; canvas.focus(); } }
+function buyPet(id,p){
+  const n=interiors.shop.npc, P0=PETS[id];
+  if(!P0||!p||!p.petShop||p.pet===id) return;
+  const cost=price(P0.cost,p);
+  if(coins<cost){ say(n,'The '+P0.name.toLowerCase()+' is '+cost+' coins.'); if(p===me) closePetMenu(); return; }
+  coins-=cost; p.pet=id; p.petX=null;
+  say(n,'Take good care of your '+P0.name.toLowerCase()+'!');
+  showMsg((online()?dn(p)+' got':'You got')+' a pet '+P0.name.toLowerCase()+'!');
+  if(p===me) closePetMenu();
+}
+function pickPet(id){ if(NET.mode==='client'){ netSend({t:'pet',id}); closePetMenu(); } else buyPet(id,me); }
+pmenu.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; if(t.dataset.pet) pickPet(t.dataset.pet); else closePetMenu(); });
+function updatePets(dt){
+  for(const p of players){
+    if(!p.pet){ p.petX=null; continue; }
+    const tx=p.x-p.fx*24+p.fy*14, ty=p.y-p.fy*20+6;
+    if(p.petX==null || p.petScene!==p.scene || Math.hypot(tx-p.petX,ty-p.petY)>400){ p.petX=tx; p.petY=ty; p.petScene=p.scene; p.petDir=1; p.petT=0; }
+    const dx=tx-p.petX, dy=ty-p.petY, d=Math.hypot(dx,dy);
+    p.petMoving=d>6;
+    if(p.petMoving){ const step=Math.min(d, Math.max(90, d*5)*dt); p.petX+=dx/d*step; p.petY+=dy/d*step; if(Math.abs(dx)>2) p.petDir=dx>0?1:-1; p.petT+=dt; }
+  }
+}
+function drawPet(p){
+  const x=p.petX, y=p.petY, s=p.petDir||1, hop=p.petMoving?Math.abs(Math.sin(p.petT*12))*3:0;
+  ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(x,y+7,9,3.5,0,0,7); ctx.fill();
+  ctx.save(); ctx.translate(x,y-hop); ctx.scale(s,1); ctx.lineWidth=1.5;
+  const dot=(cx,cy,r,c)=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.fill(); };
+  if(p.pet==='dog'){
+    ctx.strokeStyle='#633806'; ctx.beginPath(); ctx.moveTo(-9,-2); ctx.lineTo(-14,-8); ctx.stroke();
+    ctx.fillStyle='#A0652E'; ctx.beginPath(); ctx.ellipse(-1,0,10,6,0,0,7); ctx.fill();
+    dot(9,-4,6,'#A0652E'); ctx.fillStyle='#633806'; ctx.beginPath(); ctx.ellipse(7,-9,2.5,4,-0.4,0,7); ctx.fill();
+    dot(14,-3,1.8,'#2C2C2A'); dot(10,-5,1.2,'#2C2C2A');
+  } else if(p.pet==='cat'){
+    ctx.strokeStyle='#5F5E5A'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(-9,0); ctx.quadraticCurveTo(-16,-4,-13,-12); ctx.stroke();
+    ctx.fillStyle='#888780'; ctx.beginPath(); ctx.ellipse(-1,1,9,5.5,0,0,7); ctx.fill();
+    dot(8,-4,5.5,'#888780');
+    ctx.beginPath(); ctx.moveTo(4,-7); ctx.lineTo(5,-13); ctx.lineTo(8,-9); ctx.closePath(); ctx.fill();
+    ctx.beginPath(); ctx.moveTo(9,-9); ctx.lineTo(12,-13); ctx.lineTo(13,-7); ctx.closePath(); ctx.fill();
+    dot(10,-4,1.2,'#173404'); dot(7,-4,1.2,'#173404');
+  } else {
+    const flap=Math.sin(performance.now()/70)*5;
+    ctx.translate(0,-12+Math.sin(performance.now()/300)*2);
+    ctx.fillStyle='#185FA5'; ctx.beginPath(); ctx.moveTo(-6,0); ctx.lineTo(-12,-3); ctx.lineTo(-12,3); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#378ADD'; ctx.beginPath(); ctx.ellipse(0,0,7,5,0,0,7); ctx.fill();
+    dot(6,-3,4,'#378ADD');
+    ctx.fillStyle='#185FA5'; ctx.beginPath(); ctx.moveTo(-3,-1); ctx.lineTo(3,-1); ctx.lineTo(-1,-6-flap); ctx.closePath(); ctx.fill();
+    ctx.fillStyle='#FAC775'; ctx.beginPath(); ctx.ellipse(1,2,4,2.5,0,0,7); ctx.fill();
+    ctx.fillStyle='#EF9F27'; ctx.beginPath(); ctx.moveTo(9.5,-4); ctx.lineTo(13,-2.5); ctx.lineTo(9.5,-1.5); ctx.closePath(); ctx.fill();
+    dot(7,-4,1.1,'#2C2C2A');
+  }
+  ctx.restore();
 }
 function skipToWave(n){
   zombies=[]; arrows=[]; spawnQueue=[];
@@ -537,9 +706,13 @@ function computeActionFor(player){
   const scene=player.scene;
   if(scene==='world' && Math.hypot(player.x-SKIP_BTN.x,player.y-SKIP_BTN.y)<SKIP_BTN.r+40)
     return {label:'Press the red button (skip to wave '+SKIP_BTN.wave+')', run:()=>{ SKIP_BTN.pressT=0.3; skipToWave(SKIP_BTN.wave); }};
+  if(scene==='house' && distRect(player.x,player.y,CHEST)<player.r+34)
+    return {label:chestTaken?'Open the chest':'Open the chest (code lock)', local:true, code:'chest', run:openChestMenu};
+  if(nearPlot(player)) return {label:'Look at the build plot', local:true, code:'plot', run:openPlotMenu};
   if(scene==='shop'){
     const n=interiors.shop.npc;
-    if(Math.hypot(player.x-n.x,player.y-n.y)<170) return {label:'Buy a wall for 10 coins', run:buyWall};
+    if(Math.hypot(player.x-n.x,player.y-n.y)<170 && player.petShop) return {label:'Buy a pet', local:true, petMenu:true, run:openPetMenu};
+    if(Math.hypot(player.x-n.x,player.y-n.y)<170) return {label:'Buy a wall for '+price(WALL_COST,player)+' coins', run:()=>buyWall(player)};
   }
   if(scene==='world' && wallInv>0){
     let best=null, bd=90;
@@ -550,7 +723,7 @@ function computeActionFor(player){
 }
 let lastBtn='', lastBtn2='', lastBtn3='', lastWeapon='', lastStats='', action3=null;
 let lastHp=-1, lastThreat='', lastCore=-1;
-const coreEl=document.getElementById('core');
+const coreEl=document.getElementById('core'), ticketEl=document.getElementById('ticket');
 function syncUI(){
   const hp=me?me.hp:0;
   if(hp!==lastHp){ hpEl.innerHTML='&#9829;'.repeat(Math.max(0,hp))+'<span style="opacity:.3">'+'&#9829;'.repeat(MAX_HP-Math.max(0,hp))+'</span>'; lastHp=hp; }
@@ -576,9 +749,12 @@ function syncUI(){
   const lbl3=action3 ? action3.label+(touch?'':' (G)') : '';
   if(lbl3!==lastBtn3){ act3Btn.textContent=lbl3; act3Btn.hidden=!action3; lastBtn3=lbl3; }
   if(!action3) closeSwordMenu();
+  if(!cmenu.hidden && !(action && action.code===codeKind)) closeChestMenu();
+  if(!pmenu.hidden && !(action && action.petMenu)) closePetMenu();
+  const hasT=!!(me&&me.ticket); if(ticketEl.hidden===hasT) ticketEl.hidden=!hasT;
   if(weapon!==lastWeapon){ weaponEl.textContent='Weapon: '+WEAPONS[weapon].name; lastWeapon=weapon; }
 }
-function doUse(){ if(!action) return; if(NET.mode==='client') netSend({t:'use'}); else action.run(); }
+function doUse(){ if(!action) return; if(action.local||NET.mode!=='client') action.run(); else netSend({t:'use'}); }
 function doSwing(){
   if(NET.mode==='client'){ if(!me||!NET.started||me.down||me.fadeDir||me.swing>0||clientDef) return; me.swing=SWING_T; netSend({t:'swing'}); }
   else swingSword(me);
@@ -589,11 +765,16 @@ act3Btn.addEventListener('click',()=>{ if(action3) action3.run(); canvas.focus()
 function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=10, MAX_HP=5;
-const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6},{count:1,level:2}];
+const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6},{count:1,level:'s2'},{count:1,level:7},{count:2,level:7},{count:3,level:7},{count:1,level:8},{count:2,level:8},{count:3,level:8},{count:1,level:9},{count:2,level:9},{count:3,level:9},{count:1,level:'s3'}];
 const ZLEVEL={
   1:{hp:3,speed:85,coreDmg:5,reward:5,r:14,scale:1,arm:'#639922',shirt:'#5F5E5A',patch:'#888780',skin:'#97C459',skinEdge:'#3B6D11'},
   2:{hp:5,speed:85,coreDmg:10,reward:10,r:17,scale:1.25,arm:'#3B6D11',shirt:'#2C2C2A',patch:'#712B13',skin:'#639922',skinEdge:'#173404'},
   s1:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 1',hp:3,speed:51,coreDmg:5,reward:5,r:14,scale:1,ranged:true,range:420,fireCD:2,arrowSpeed:380},
+  s2:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 2',hp:5,speed:51,coreDmg:10,reward:10,r:17,scale:1.25,ranged:true,range:420,fireCD:2,arrowSpeed:380,bone:'#E3D9BF',eye:'#A32D2D'},
+  s3:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 3',hp:7,speed:51,coreDmg:15,reward:15,r:20,scale:1.45,ranged:true,range:420,fireCD:2,arrowSpeed:380,bone:'#D3C7A8',eye:'#534AB7'},
+  9:{hp:19,speed:85,coreDmg:45,reward:45,r:35,scale:2.65,arm:'#4B1528',shirt:'#2C2C2A',patch:'#E24B4A',skin:'#A32D2D',skinEdge:'#4B1528'},
+  8:{hp:17,speed:85,coreDmg:40,reward:40,r:35,scale:2.45,arm:'#2C2C2A',shirt:'#712B13',patch:'#B4B2A9',skin:'#5F5E5A',skinEdge:'#2C2C2A'},
+  7:{hp:15,speed:85,coreDmg:35,reward:35,r:32,scale:2.25,arm:'#712B13',shirt:'#26215C',patch:'#EF9F27',skin:'#D85A30',skinEdge:'#4A1B0C'},
   6:{hp:13,speed:85,coreDmg:30,reward:30,r:29,scale:2.05,arm:'#26215C',shirt:'#501313',patch:'#FAC775',skin:'#534AB7',skinEdge:'#26215C'},
   5:{hp:11,speed:85,coreDmg:25,reward:25,r:26,scale:1.85,arm:'#085041',shirt:'#2C2C2A',patch:'#EF9F27',skin:'#0F6E56',skinEdge:'#04342C'},
   4:{hp:9,speed:85,coreDmg:20,reward:20,r:23,scale:1.65,arm:'#173404',shirt:'#791F1F',patch:'#501313',skin:'#27500A',skinEdge:'#173404'},
@@ -913,6 +1094,16 @@ window.addEventListener('keydown',e=>{
     return;
   }
   if(defeated||clientDef) return;
+  if(!pmenu.hidden){
+    if(e.code==='Escape'){ e.preventDefault(); closePetMenu(); return; }
+    const pick={Digit1:'bird',Digit2:'cat',Digit3:'dog'}[e.code];
+    if(pick){ e.preventDefault(); if(!(me&&me.pet===pick)) pickPet(pick); return; }
+    if(pmenu.contains(e.target) && (e.code==='Space'||e.code==='Enter'||e.code==='Tab')) return;
+  }
+  if(!cmenu.hidden){
+    if(e.code==='Escape'){ e.preventDefault(); closeChestMenu(); return; }
+    if(cmenu.contains(e.target)) return;
+  }
   if(!bmenu.hidden){
     if(e.code==='Escape'){ e.preventDefault(); closeBridgeMenu(); return; }
     const pick={Digit1:'north',Digit2:'east',Digit3:'south',Digit4:'west'}[e.code];
@@ -1047,7 +1238,8 @@ function drawArrow(a){
   ctx.restore();
 }
 function drawSkeleton(z){
-  const a=Math.atan2(z.fy,z.fx), sw=Math.sin(z.t*5)*3;
+  const a=Math.atan2(z.fy,z.fx), sw=Math.sin(z.t*5)*3, sc=z.L.scale||1, bone=z.L.bone||'#F1EFE8', eye=z.L.eye||'#2C2C2A';
+  ctx.save(); ctx.translate(z.x,z.y); ctx.scale(sc,sc); ctx.translate(-z.x,-z.y);
   if(z.inWater){
     const rp=Math.sin(performance.now()/180)*2;
     ctx.strokeStyle='rgba(230,241,251,.8)'; ctx.lineWidth=2;
@@ -1057,7 +1249,7 @@ function drawSkeleton(z){
     ctx.strokeStyle='#D3D1C7'; ctx.lineWidth=3; ctx.lineCap='round';
     ctx.beginPath(); ctx.moveTo(z.x-5,z.y+4); ctx.lineTo(z.x-6,z.y+13+sw*0.3); ctx.moveTo(z.x+5,z.y+4); ctx.lineTo(z.x+6,z.y+13-sw*0.3); ctx.stroke();
   }
-  ctx.fillStyle='#F1EFE8'; ctx.strokeStyle='#888780'; ctx.lineWidth=1.5;
+  ctx.fillStyle=bone; ctx.strokeStyle='#888780'; ctx.lineWidth=1.5;
   roundRect(z.x-9,z.y-6,18,15,5); ctx.fill(); ctx.stroke();
   ctx.strokeStyle='#888780'; ctx.lineWidth=1.5;
   for(let k=0;k<3;k++){ ctx.beginPath(); ctx.moveTo(z.x-6,z.y-2+k*4); ctx.lineTo(z.x+6,z.y-2+k*4); ctx.stroke(); }
@@ -1072,18 +1264,19 @@ function drawSkeleton(z){
   ctx.beginPath(); ctx.moveTo(bx,-by); ctx.lineTo(10+pull,0); ctx.lineTo(bx,by); ctx.stroke();
   ctx.restore(); ctx.lineCap='butt';
   const hx=z.x+z.fx*3, hy=z.y-13+z.fy*2;
-  ctx.fillStyle='#F1EFE8'; ctx.beginPath(); ctx.arc(hx,hy,9,0,7); ctx.fill();
+  ctx.fillStyle=bone; ctx.beginPath(); ctx.arc(hx,hy,9,0,7); ctx.fill();
   ctx.strokeStyle='#888780'; ctx.lineWidth=1.5; ctx.stroke();
   if(z.fy>-0.5){
-    ctx.fillStyle='#2C2C2A';
+    ctx.fillStyle=eye;
     ctx.beginPath(); ctx.arc(hx+z.fx*4-3.5,hy+z.fy,2.4,0,7); ctx.fill();
     ctx.beginPath(); ctx.arc(hx+z.fx*4+3.5,hy+z.fy,2.4,0,7); ctx.fill();
-    ctx.fillRect(hx+z.fx*4-3,hy+4+z.fy,6,1.5);
+    ctx.fillStyle='#2C2C2A'; ctx.fillRect(hx+z.fx*4-3,hy+4+z.fy,6,1.5);
   }
   if(z.hitT>0){ ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(z.x,z.y-3,17,0,7); ctx.fill(); }
-  const bw=36; ctx.fillStyle='#2C2C2A'; ctx.fillRect(z.x-bw/2-1,z.y-37,bw+2,7);
-  ctx.fillStyle='#E24B4A'; ctx.fillRect(z.x-bw/2,z.y-36,bw*Math.max(0,z.hp),5);
-  label(z.L.label,z.x,z.y-48,'#444441',14);
+  ctx.restore();
+  const top=z.y-37*sc, bw=36*sc; ctx.fillStyle='#2C2C2A'; ctx.fillRect(z.x-bw/2-1,top,bw+2,7);
+  ctx.fillStyle='#E24B4A'; ctx.fillRect(z.x-bw/2,top+1,bw*Math.max(0,z.hp),5);
+  label(z.L.label,z.x,top-11,'#444441',14);
 }
 function drawZombie(z){
   ctx.save();
@@ -1117,8 +1310,8 @@ function drawZombie(z){
   if(z.hitT>0){ ctx.fillStyle='rgba(255,255,255,.6)'; ctx.beginPath(); ctx.arc(z.x,z.y-3,17,0,7); ctx.fill(); }
   const bw=36; ctx.fillStyle='#2C2C2A'; ctx.fillRect(z.x-bw/2-1,z.y-33,bw+2,7);
   ctx.fillStyle='#E24B4A'; ctx.fillRect(z.x-bw/2,z.y-32,bw*Math.max(0,z.hp),5);
-  label('Zombie Lv '+z.level,z.x,z.y-44,'#27500A',14);
   ctx.restore();
+  label('Zombie Lv '+z.level,z.x,z.y-33*(z.L.scale||1)-11,'#27500A',z.L.scale>1?16:14);
 }
 function drawCore(c){
   const now=performance.now()/1000, glow=0.22+0.12*Math.sin(now*2.5);
@@ -1411,6 +1604,7 @@ function renderWorld(viewP){
   const ents=[];
   for(const t of trees) if(inView(t.x,t.y,60)) ents.push({y:t.y,draw:()=>drawTree(t)});
   for(const p of players) if(p.scene==='world'&&!p.down) ents.push({y:p.y,draw:()=>drawPlayer(p)});
+  for(const p of players) if(p.pet&&p.petX!=null&&p.petScene==='world') ents.push({y:p.petY,draw:()=>drawPet(p)});
   for(const z of zombies) ents.push({y:z.y,draw:()=>z.L.ranged?drawSkeleton(z):drawZombie(z)});
   for(const a of arrows) ents.push({y:a.y,draw:()=>drawArrow(a)});
   ents.push({y:core.y,draw:()=>drawCore(core)});
@@ -1582,6 +1776,7 @@ function renderRoom(room){
   const key=room===interiors.house?'house':'shop';
   roomPlayers=players.filter(p=>p.scene===key&&!p.down);
   const ents=roomPlayers.map(p=>({y:p.y,draw:()=>drawPlayer(p)}));
+  for(const p of players) if(p.pet&&p.petX!=null&&p.petScene===key) ents.push({y:p.petY,draw:()=>drawPet(p)});
   if(room.npc) ents.push({y:room.npc.y,draw:()=>drawNPC(room.npc)});
   ents.sort((a,b)=>a.y-b.y); for(const e of ents) e.draw();
   if(room.npc && roomPlayers.some(p=>Math.hypot(p.x-room.npc.x,p.y-room.npc.y)<190)) drawBubble(room.npc,room.w);
@@ -1596,6 +1791,7 @@ function frame(now){
   if(NET.mode==='client') clientUpdate(dt);
   else if(NET.mode==='host'){ if(NET.started) update(dt); hostSend(dt); }
   else if(modesEl.hidden) update(dt);
+  updatePets(dt);
   if(NET.mode!=='client') for(const p of players) p.action=computeActionFor(p);
   action=me?computeActionFor(me):null; if(me) me.action=action; action2=computeAction2(); action3=computeAction3();
   syncUI(); syncNetInfo(); render(); requestAnimationFrame(frame);
@@ -1618,7 +1814,7 @@ function resetGame(){
   if(NET.mode==='client') return;
   rects.length=BASE_RECTS;
   for(const sl of slots) sl.built=false;
-  coins=50; wallInv=0; weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
+  coins=50; wallInv=0; chestTaken=false; for(const p of players){ p.ticket=false; p.petShop=false; p.pet=''; } closeChestMenu(); closePetMenu(); weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
   zombies=[]; drops=[]; arrows=[]; wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false; gameTime=0;
   core.hp=core.maxHp; core.hitT=0; defeated=false; NET.defKind=0; overEl.hidden=true;
   resetPlayers();
@@ -1767,7 +1963,8 @@ function dropRemote(p){
   players=players.filter(q=>q!==p); NET.conns=NET.conns.filter(c=>c!==p.conn);
   for(const z of zombies) if(z.aggro===p) z.aggro=null;
   clearTimeout(p.helloT);
-  showMsg(dn(p)+' left the game.');
+  const hadT=!!p.ticket; if(hadT){ p.ticket=false; chestTaken=false; }
+  showMsg(dn(p)+' left the game.'+(hadT?' The discount ticket is back in the chest.':''));
   renderLobby();
 }
 function onHostData(p,d){
@@ -1788,19 +1985,22 @@ function onHostData(p,d){
     p.scene=sc; p.nx=x; p.ny=y; p.fx=+d.fx||0; p.fy=+d.fy||0; p.moving=!!d.mv; p.t=+d.an||0;
     p.fade=Math.max(0,Math.min(1,+d.fa||0)); p.fadeDir=d.fd|0;
   } else if(d.t==='swing'){ if(NET.started) swingSword(p); }
-  else if(d.t==='use'){ if(!NET.started||defeated) return; const a=computeActionFor(p); if(a) a.run(); }
-  else if(d.t==='bridge'){ if(nearShop(p)) destroyBridge(String(d.id)); }
-  else if(d.t==='sword'){ if(nearShop(p)) buySword(String(d.id)); }
+  else if(d.t==='use'){ if(!NET.started||defeated) return; const a=computeActionFor(p); if(a&&!a.local) a.run(); }
+  else if(d.t==='chest'){ if(nearChest(p) && cleanChestCode(d.code)===CHEST_CODE) claimTicket(p); }
+  else if(d.t==='bridge'){ if(nearShop(p)&&!p.petShop) destroyBridge(String(d.id),p); }
+  else if(d.t==='sword'){ if(nearShop(p)&&!p.petShop) buySword(String(d.id),p); }
+  else if(d.t==='plot'){ if(nearPlot(p) && cleanChestCode(d.code)===PET_CODE) togglePetShop(p); }
+  else if(d.t==='pet'){ if(nearShop(p)) buyPet(String(d.id),p); }
 }
 const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
 function npcState(n){ const left=n.sayUntil-performance.now(); return [r1(n.x),r1(n.y),r2(n.fx||0),r2(n.fy==null?1:n.fy),n.moving?1:0,r2(n.t||0),left>0?n.say:'',left>0?Math.round(left):0]; }
 function snapshot(){
   return {t:'snap', st:NET.started?1:0,
-    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'']),
+    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'',p.ticket?1:0,p.petShop?1:0,p.pet||'']),
     z:zombies.map(z=>[z.id,z.level,r1(z.x),r1(z.y),r2(z.fx),r2(z.fy),r2(z.hp),r2(z.hitT),r2(z.atkT),z.inWater?1:0,z.shooting?1:0,r2(z.t),z.aggro?1:0,z.reached?1:0,r2(z.atkCD)]),
     ar:arrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy)]),
     dr:drops.map(c=>[r1(c.x),r1(c.y),c.value,r2(c.t)]),
-    core:[core.hp,r2(core.hitT)], co:coins, wa:wallInv, we:weapon, wv:wave, wt:r2(waveTimer), wl:waveLive?1:0, dn:allDone?1:0, sq:spawnQueue.length,
+    core:[core.hp,r2(core.hitT)], co:coins, tk:chestTaken?1:0, wa:wallInv, we:weapon, wv:wave, wt:r2(waveTimer), wl:waveLive?1:0, dn:allDone?1:0, sq:spawnQueue.length,
     br:bridges.map(b=>b.intact?1:0), sl:slots.map(q=>q.built?1:0),
     msg:[NET.msgId, msgEl.textContent ? NET.msgText : ''],
     nh:npcState(interiors.house.npc), ns:npcState(interiors.shop.npc),
@@ -1879,11 +2079,11 @@ function applySnap(d){
   if(NET.started && !wasStarted && !modesEl.hidden && (panels.join.hidden===false)){ started=true; closeModes(); showMsg('You joined as '+(me?dn(me):myName)+'. Good luck!'); }
   const seen=new Set();
   for(const a of d.pl){
-    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm]=a;
+    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm,tk,ps,pt]=a;
     seen.add(slot);
     let p=players.find(q=>q.i===slot);
     if(!p){ p=makePlayer(slot); p.tp=-1; p.x=x; p.y=y; players.push(p); players.sort((u,v)=>u.i-v.i); }
-    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.name=cleanName(nm);
+    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.name=cleanName(nm); p.ticket=!!tk; if(p===me&&!ps&&p.petShop) closePetMenu(); p.petShop=!!ps; p.pet=PETS[pt]?pt:'';
     if(slot===NET.slot){
       if(me!==p){ me=p; p.view={x:0,y:0,w:CW,h:CH}; }
       if(tp!==p.tp){
@@ -1908,7 +2108,7 @@ function applySnap(d){
   arrows=d.ar.map(a=>({x:a[0],y:a[1],vx:a[2],vy:a[3]}));
   drops=d.dr.map(a=>({x:a[0],y:a[1],value:a[2],t:a[3]}));
   core.hp=d.core[0]; core.hitT=d.core[1];
-  coins=d.co; wallInv=d.wa; weapon=d.we; wave=d.wv; waveTimer=d.wt; waveLive=!!d.wl; allDone=!!d.dn; spawnQueue=new Array(d.sq).fill(1);
+  coins=d.co; chestTaken=!!d.tk; wallInv=d.wa; weapon=d.we; wave=d.wv; waveTimer=d.wt; waveLive=!!d.wl; allDone=!!d.dn; spawnQueue=new Array(d.sq).fill(1);
   let changed=false;
   d.br.forEach((v,i)=>{ if(bridges[i].intact!==!!v){ bridges[i].intact=!!v; changed=true; } });
   d.sl.forEach((v,i)=>{ if(slots[i].built!==!!v){ slots[i].built=!!v; changed=true; } });
@@ -2151,7 +2351,7 @@ setInterval(()=>{
 
 openModes('main');
 setTimeout(presStart, 300);
-if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,set:(k,v)=>{ if(k==='coins') coins=v; }});
+if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,ticket:()=>chestTaken,PETS,price,set:(k,v)=>{ if(k==='coins') coins=v; }});
 })();
 </script>
 </body>
