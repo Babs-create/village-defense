@@ -202,6 +202,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <div id="mWatchPanel" hidden>
       <p class="sub">Everyone playing right now</p>
       <p id="watchSummary" class="note" aria-live="polite">Looking for players&hellip;</p>
+      <p id="watchStatus" class="note" aria-live="polite"></p>
       <ul id="watchList" class="lobby watch"></ul>
       <button type="button" id="mWatchBack" class="back">Back</button>
     </div>
@@ -1704,7 +1705,9 @@ function hostGame(){
   openModes('host'); renderLobby();
   tryHost(0);
 }
-function tryHost(attempt){
+const JOINQ=[];
+function flushJoinQ(code){ const q=JOINQ.splice(0); for(const f of q){ try{ f(code); }catch(e){} } }
+function tryHost(attempt, silent){
   const P=PeerClass();
   if(!P){ hostStatus.textContent='Online play could not load on this page.'; return; }
   const code=newCode();
@@ -1716,17 +1719,32 @@ function tryHost(attempt){
     NET.code=code; codeBox.textContent=code; startBtn.disabled=false;
     hostStatus.textContent='Share this code with your friends. Up to 3 can join, before or during the game.';
     renderLobby();
+    if(silent){
+      showMsg('Someone is joining your game. You are now hosting game '+code+'.');
+      if(!modesEl.hidden && !panels.main.hidden) openModes('online');
+    }
+    flushJoinQ(code);
   });
   peer.on('connection',conn=>onHostConn(conn));
   peer.on('error',err=>{
     if(NET.peer!==peer) return;
     const type=err&&err.type;
-    if(type==='unavailable-id' && attempt<5){ try{peer.destroy();}catch(e){} tryHost(attempt+1); return; }
+    if(type==='unavailable-id' && attempt<5){ try{peer.destroy();}catch(e){} tryHost(attempt+1, silent); return; }
     if(type==='peer-unavailable') return;
+    if(silent && !NET.code){ leaveOnline(); flushJoinQ(null); return; }
     hostStatus.textContent='Could not reach the game server'+(type?' ('+type+')':'')+'. Check your internet connection and try again.';
   });
   peer.on('disconnected',()=>{ if(NET.peer===peer){ try{ peer.reconnect(); }catch(e){} } });
 }
+function openToJoin(cb){
+  if(NET.mode==='host'){ if(NET.code) cb(NET.code); else JOINQ.push(cb); return; }
+  if(NET.mode!=='solo' || !started || allDone || defeated){ cb(null); return; }
+  if(!PeerClass()){ cb(null); return; }
+  NET.mode='host'; NET.slot=0; NET.started=true; NET.conns=[];
+  JOINQ.push(cb);
+  tryHost(0, true);
+}
+function answerAsk(conn){ openToJoin(code=>{ try{ conn.send(code?{t:'code',code}:{t:'nojoin'}); }catch(e){} }); }
 function onHostConn(conn){
   conn.on('open',()=>{
     if(NET.mode!=='host'){ try{conn.close();}catch(e){} return; }
@@ -1977,13 +1995,13 @@ const DIR_ID='village-defense-v1-directory';
 const PRES={sid:Math.random().toString(36).slice(2,12), peer:null, role:'none', dirConn:null, entries:new Map(), retry:0, listCb:null, listTimer:0, starting:false};
 function myInfo(){
   return {mode:NET.mode, code:(NET.mode==='solo'?'':NET.code)||'', started:(NET.mode==='solo'?started:NET.started)?1:0, menu:modesEl.hidden?0:1,
-    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid, name:myName, names:NET.mode==='host'?players.map(dn):[]};
+    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid, pid:PRES.role==='dir'?DIR_ID:(PRES.peer&&PRES.peer.id)||'', name:myName, names:NET.mode==='host'?players.map(dn):[]};
 }
 function cleanInfo(i){
   if(!i||typeof i!=='object') return null;
   const n=(v,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(+v||0)));
   return {mode:['solo','host','client'].includes(i.mode)?i.mode:'solo', code:String(i.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),
-    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12), name:cleanName(i.name), names:Array.isArray(i.names)?i.names.slice(0,4).map(cleanName).filter(Boolean):[]};
+    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12), pid:String(i.pid||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,64), name:cleanName(i.name), names:Array.isArray(i.names)?i.names.slice(0,4).map(cleanName).filter(Boolean):[]};
 }
 function presReset(ms){
   const p=PRES.peer; PRES.peer=null; PRES.dirConn=null; PRES.role='none'; PRES.starting=false; PRES.entries.clear();
@@ -2003,6 +2021,7 @@ function presStart(){
       if(PRES.peer!==peer||!d||typeof d!=='object') return;
       if(d.t==='info'){ const info=cleanInfo(d.info); if(info) PRES.entries.set(conn,{info,last:performance.now()}); }
       else if(d.t==='list'){ try{ conn.send({t:'list', items:dirList()}); }catch(e){} }
+      else if(d.t==='ask') answerAsk(conn);
     });
     conn.on('close',()=>PRES.entries.delete(conn));
     conn.on('error',()=>PRES.entries.delete(conn));
@@ -2020,6 +2039,7 @@ function presJoinDir(){
   const P=PeerClass(); let peer;
   try{ peer=new P({debug:0}); }catch(e){ PRES.starting=false; return; }
   PRES.peer=peer; PRES.role='member';
+  peer.on('connection',conn=>{ conn.on('data',d=>{ if(PRES.peer===peer && d && d.t==='ask') answerAsk(conn); }); });
   peer.on('open',()=>{
     if(PRES.peer!==peer) return;
     PRES.starting=false;
@@ -2054,7 +2074,7 @@ function requestList(cb){
   cb(undefined);
 }
 const watchSummary=document.getElementById('watchSummary'), watchList=document.getElementById('watchList');
-function openWatch(){ openModes('watch'); watchSummary.textContent='Looking for players…'; watchList.innerHTML=''; refreshWatch(); }
+function openWatch(){ openModes('watch'); watchStatus.textContent=''; watchSummary.textContent='Looking for players…'; watchList.innerHTML=''; refreshWatch(); }
 function esc(t){ return String(t).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c])); }
 function refreshWatch(){
   requestList(items=>{
@@ -2085,13 +2105,43 @@ function refreshWatch(){
       if(!it.started) status='In the menu';
       else if(it.done) status='Cleared all '+it.waves+' waves';
       else status=(it.wave?'Wave '+it.wave+' of '+it.waves:'Before wave 1')+', core '+it.core+'/100';
-      return '<li><div class="wmain"><b>'+esc((it.sid===PRES.sid?myName:it.name)||'Solo player')+(it.sid===PRES.sid?' (you)':'')+'</b><span>'+esc(status)+'</span></div></li>';
+      const canJoin=it.sid!==PRES.sid && it.started && !it.done && it.pid;
+      return '<li><div class="wmain"><b>'+esc((it.sid===PRES.sid?myName:it.name)||'Solo player')+(it.sid===PRES.sid?' (you)':'')+'</b><span>'+(it.started?'Playing solo. ':'')+esc(status)+'</span></div>'+(canJoin?'<button type="button" class="wjoin" data-pid="'+esc(it.pid)+'" data-name="'+esc(it.name||'')+'">Join</button>':'')+'</li>';
     });
     watchSummary.textContent=people+' '+(people===1?'person has':'people have')+' the game open: '+games.size+' online game'+(games.size===1?'':'s')+' and '+solos.length+' on their own. Updates every few seconds.';
     watchList.innerHTML=gameRows.join('')+soloRows.join('') || '<li>No one else is playing right now.</li>';
   });
 }
-watchList.addEventListener('click',e=>{ const b=e.target.closest('button[data-code]'); if(b){ openModes('join'); joinCode.value=b.dataset.code; joinGame(b.dataset.code); } });
+const watchStatus=document.getElementById('watchStatus');
+let askSeq=0;
+function askToJoin(pid,name){
+  const who=name||'That player', my=++askSeq, peer=PRES.peer;
+  watchStatus.textContent='Asking '+who+' to open their game…';
+  if(!peer||!pid||PRES.role==='none'){ watchStatus.textContent='Not connected to the player list yet. Try again in a moment.'; return; }
+  let c, done=false, timer=0;
+  const finish=(code,msg)=>{
+    if(done) return; done=true; clearTimeout(timer);
+    setTimeout(()=>{ try{ c&&c.close(); }catch(e){} },1500);
+    if(my!==askSeq || panels.watch.hidden || modesEl.hidden) return;
+    if(code){ watchStatus.textContent=''; openModes('join'); joinCode.value=code; joinGame(code); }
+    else watchStatus.textContent=msg;
+  };
+  try{ c=peer.connect(pid,{reliable:true,serialization:'json'}); }catch(e){ finish(null,'Could not reach '+who+'.'); return; }
+  c.on('open',()=>{ try{ c.send({t:'ask'}); }catch(e){} });
+  c.on('data',d=>{
+    if(!d||typeof d!=='object') return;
+    if(d.t==='code'){ const code=String(d.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4); finish(code.length===4?code:null, who+' could not open their game.'); }
+    else if(d.t==='nojoin') finish(null, who+' can\'t be joined right now (they may be in the menu or their game is over).');
+  });
+  c.on('error',()=>finish(null,'Could not reach '+who+'.'));
+  timer=setTimeout(()=>finish(null, who+' did not answer. Try again.'),10000);
+}
+watchList.addEventListener('click',e=>{
+  const b=e.target.closest('button[data-code]');
+  if(b){ openModes('join'); joinCode.value=b.dataset.code; joinGame(b.dataset.code); return; }
+  const s=e.target.closest('button[data-pid]');
+  if(s) askToJoin(s.dataset.pid, s.dataset.name);
+});
 document.getElementById('mWatchBack').addEventListener('click',()=>openModes('join'));
 setInterval(()=>{
   if(PRES.role==='member' && PRES.dirConn && PRES.dirConn.open!==false){ try{ PRES.dirConn.send({t:'info', info:myInfo()}); }catch(e){} }
@@ -2101,7 +2151,7 @@ setInterval(()=>{
 
 openModes('main');
 setTimeout(presStart, 300);
-if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,set:(k,v)=>{ if(k==='coins') coins=v; }});
+if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,set:(k,v)=>{ if(k==='coins') coins=v; }});
 })();
 </script>
 </body>
