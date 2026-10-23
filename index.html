@@ -56,10 +56,15 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #act3:hover{background:#B4B2A9;}
 #act3:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #act3[hidden]{display:none;}
-#bmenu,#smenu{position:absolute;left:50%;bottom:194px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
+#act4{position:absolute;left:50%;bottom:194px;transform:translateX(-50%);font:600 17px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  padding:12px 22px;background:#C0DD97;color:#173404;border:2px solid #3B6D11;border-radius:10px;cursor:pointer;white-space:nowrap;}
+#act4:hover{background:#97C459;}
+#act4:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#act4[hidden]{display:none;}
+#bmenu,#smenu{position:absolute;left:50%;bottom:252px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
   border:2px solid #A32D2D;border-radius:12px;padding:12px 14px;width:min(320px, calc(100% - 32px));box-sizing:border-box;}
 #bmenu[hidden],#smenu[hidden]{display:none;}
-#pmenu{position:absolute;left:50%;bottom:136px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
+#pmenu{position:absolute;left:50%;bottom:252px;transform:translateX(-50%);z-index:2;background:var(--panel);color:var(--ink);
   border:2px solid #3B6D11;border-radius:12px;padding:12px 14px;width:min(320px, calc(100% - 32px));box-sizing:border-box;}
 #pmenu[hidden]{display:none;}
 #pmenu h3{margin:0 0 8px;font-size:17px;font-weight:600;}
@@ -109,6 +114,12 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #swing{position:absolute;left:16px;bottom:20px;font:600 17px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
   padding:12px 18px;background:#FAEEDA;color:#633806;border:2px solid #854F0B;border-radius:10px;cursor:pointer;}
 #swing:hover{background:#FAC775;}
+#petBtn{position:absolute;left:16px;bottom:78px;font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  padding:9px 14px;background:#C0DD97;color:#173404;border:2px solid #3B6D11;border-radius:10px;cursor:pointer;}
+#petBtn:hover{background:#97C459;}
+#petBtn.on{background:#F7C1C1;color:#501313;border-color:#A32D2D;}
+#petBtn[hidden]{display:none;}
+#petBtn:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #swing:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #swing[hidden],#zone[hidden],#hpWrap[hidden]{display:none;}
 #modes{position:absolute;inset:0;z-index:5;display:flex;align-items:center;justify-content:center;background:rgba(20,20,18,.65);padding:16px;box-sizing:border-box;}
@@ -149,6 +160,31 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #nameInput{font:inherit;font-size:20px;font-weight:600;padding:8px 10px;border-radius:10px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
 #nameInput:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #nameInput.bad{border-color:#A32D2D;}
+#friendForm{display:flex;gap:8px;align-items:stretch;}
+#friendSearch{flex:1;min-width:0;font:inherit;font-size:18px;font-weight:600;padding:8px 10px;border-radius:10px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
+#friendSearch:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#friendForm .primary{width:auto;margin:0;padding:0 18px;}
+#modes .watch .wrem{font:inherit;font-size:13px;padding:5px 10px;border-radius:8px;cursor:pointer;background:transparent;color:var(--ink2);border:1px solid var(--edge);}
+#modes .fhead{margin:14px 0 0;font-weight:600;font-size:15px;}
+#chatBox{position:absolute;right:12px;bottom:200px;z-index:2;width:min(300px, calc(100% - 24px));background:rgba(20,20,18,.55);color:#F1EFE8;border-radius:10px;padding:8px 10px;box-sizing:border-box;font-size:14px;}
+#chatBox[hidden]{display:none;}
+#chatHead{display:flex;align-items:center;justify-content:space-between;gap:8px;font-weight:600;font-size:13px;color:#C0DD97;margin-bottom:4px;}
+#chatOpen{font:600 13px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:3px 10px;border-radius:6px;cursor:pointer;background:#C0DD97;color:#173404;border:1px solid #3B6D11;}
+#chatLog{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:2px;max-height:130px;overflow:hidden;}
+#chatLog li{line-height:1.3;word-wrap:break-word;}
+#chatLog b{font-weight:600;}
+#chatLog .sys{color:#C0DD97;font-style:italic;}
+#chatForm{display:flex;gap:6px;margin-top:6px;}
+#chatForm[hidden]{display:none;}
+#chatInput{flex:1;min-width:0;font:inherit;font-size:14px;padding:5px 8px;border-radius:6px;border:1px solid #888780;background:#F1EFE8;color:#2C2C2A;}
+#chatForm button{font:600 13px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:4px 10px;border-radius:6px;cursor:pointer;background:#C0DD97;color:#173404;border:1px solid #3B6D11;}
+#freq{position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:6;background:var(--panel);color:var(--ink);border:2px solid #185FA5;border-radius:12px;padding:12px 14px;width:min(360px, calc(100% - 32px));box-sizing:border-box;box-shadow:0 4px 16px rgba(0,0,0,.25);}
+#freq[hidden]{display:none;}
+#freq p{margin:0 0 10px;font-size:15px;line-height:1.35;}
+#freq .row{display:flex;gap:8px;}
+#freq button{flex:1;font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;padding:9px;border-radius:8px;cursor:pointer;}
+#freqYes{background:#C0DD97;color:#173404;border:2px solid #3B6D11;}
+#freqNo{background:transparent;color:var(--ink);border:2px solid var(--edge);}
 #joinForm{display:flex;gap:8px;align-items:stretch;}
 #joinCode{flex:1;min-width:0;font:inherit;font-size:30px;font-weight:600;letter-spacing:.2em;text-transform:uppercase;text-align:center;padding:6px 8px;border-radius:10px;border:2px solid var(--edge);background:transparent;color:var(--ink);}
 #joinCode:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
@@ -178,6 +214,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
   <button id="act" type="button" hidden></button>
   <button id="act2" type="button" hidden></button>
   <button id="act3" type="button" hidden></button>
+  <button id="act4" type="button" hidden></button>
   <div id="smenu" class="menu" hidden role="dialog" aria-label="Choose a sword to buy">
     <h3>Swords for sale</h3>
     <div class="grid one">
@@ -213,6 +250,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <button type="button" class="cancel">Cancel</button>
   </div>
   <button id="swing" type="button">Swing sword</button>
+  <button id="petBtn" type="button" hidden></button>
   <div id="modes" role="dialog" aria-label="Start menu"><div class="card">
     <h2>Village Defense</h2>
     <div id="mMain">
@@ -222,6 +260,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
         <button type="button" id="mSolo"><b>Play solo</b><span>Just you on this computer</span></button>
         <button type="button" id="mHost"><b>Host an online game</b><span>Get a code to share with up to 3 friends</span></button>
         <button type="button" id="mJoin"><b>Join a game</b><span>Type in a friend's code</span></button>
+        <button type="button" id="mFriends"><b>Friends</b><span>Find players by username and join your friends</span></button>
       </div>
       <p class="note">Controls: arrow keys or WASD to move, Enter or F to swing, E, Space or Right Shift to use. Online play needs an internet connection on every computer.</p>
       <p id="mainStatus" class="note" aria-live="polite"></p>
@@ -247,14 +286,26 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
       <ul id="watchList" class="lobby watch"></ul>
       <button type="button" id="mWatchBack" class="back">Back</button>
     </div>
+    <div id="mFriendsPanel" hidden>
+      <p class="sub">Find a player by their username</p>
+      <form id="friendForm"><input id="friendSearch" maxlength="12" autocomplete="off" spellcheck="false" placeholder="Username" aria-label="Username to search for"><button type="submit" class="primary">Search</button></form>
+      <p id="friendStatus" class="note" aria-live="polite"></p>
+      <ul id="friendResults" class="lobby watch"></ul>
+      <p class="fhead">Your friends</p>
+      <ul id="friendList" class="lobby watch"></ul>
+      <button type="button" id="mFriendsBack" class="back">Back</button>
+    </div>
     <div id="mOnlinePanel" hidden>
       <p class="sub" id="onlineInfo"></p>
       <ul id="lobby2" class="lobby"></ul>
       <button type="button" id="mResume" class="primary">Back to game</button>
+      <button type="button" id="mFriends2" class="back">Friends</button>
       <button type="button" id="mLeave" class="back">Leave online game</button>
     </div>
     <button type="button" id="modesCancel" hidden>Back to game</button>
   </div></div>
+  <div id="chatBox" hidden aria-label="Clean chat"><div id="chatHead"><span>Clean chat</span><button type="button" id="chatOpen">Chat (T)</button></div><ul id="chatLog" aria-live="polite"></ul><form id="chatForm" hidden><input id="chatInput" maxlength="80" autocomplete="off" placeholder="Say something nice" aria-label="Chat message"><button type="submit">Send</button></form></div>
+  <div id="freq" hidden role="alertdialog" aria-labelledby="freqText"><p id="freqText"></p><div class="row"><button type="button" id="freqYes">Accept</button><button type="button" id="freqNo">Decline</button></div></div>
   <div id="over" hidden><div><h2 id="overT">You were defeated</h2><p id="overP">The zombie got you. Your coins and walls are kept.</p><button id="retry" type="button" data-host-only>Try again</button></div></div>
 </div>
 <script>
@@ -396,7 +447,7 @@ const interiors={
       {k:'barrel',x:96,y:340,w:46,h:46},{k:'barrel',x:150,y:356,w:40,h:40},
       {k:'crate',x:560,y:336,w:56,h:56},{k:'crate',x:620,y:350,w:40,h:40}
     ], rug:{x:290,y:270,w:140,h:70,c:'#185FA5',e:'#85B7EB'},
-    npc:{name:'Shopkeeper', x:360, y:110, r:14, greet:()=>me&&me.petShop?(me.ticket?'Half price with your ticket! ':'')+'Pets only now! Bird '+price(100)+', cat '+price(200)+', dog '+price(300)+'.':(me&&me.ticket?'Half price with your ticket! ':'')+(weapon!=='iron'?'Walls '+price(10)+', swords '+price(100)+' and '+price(200)+', bridges '+price(100)+'.':(bridges.some(b=>b.intact)?'Walls are '+price(10)+' coins. I can wreck a bridge for '+price(100)+'.':'Walls are '+price(10)+' coins each.')), say:'', sayUntil:0,
+    npc:{name:'Shopkeeper', x:360, y:110, r:14, greet:()=>(me&&me.ticket?'Half price with your ticket! ':'')+(weapon!=='iron'?'Walls '+price(10)+', swords '+price(100)+' and '+price(200)+', bridges '+price(100)+', pets from '+price(100)+'.':(bridges.some(b=>b.intact)?'Walls are '+price(10)+' coins. I can wreck a bridge for '+price(100)+'.':'Walls are '+price(10)+' coins each.')), say:'', sayUntil:0,
       look:{body:'#854F0B', outline:'#412402', trim:'#3B6D11', skin:'#F0997B', hair:'#D3D1C7', mustache:'#B4B2A9'}}}
 };
 
@@ -477,7 +528,7 @@ function syncBridgeMenu(){
 }
 function openBridgeMenu(){
   if(!bmenu.hidden){ closeBridgeMenu(); return; }
-  closeSwordMenu();
+  closeSwordMenu(); closePetMenu();
   syncBridgeMenu(); bmenu.hidden=false;
   const first=bmenu.querySelector('button[data-b]:not(:disabled)'); if(first) first.focus();
 }
@@ -541,7 +592,7 @@ function syncSwordMenu(){
 }
 function openSwordMenu(){
   if(!smenu.hidden){ closeSwordMenu(); return; }
-  closeBridgeMenu(); syncSwordMenu(); smenu.hidden=false;
+  closeBridgeMenu(); closePetMenu(); syncSwordMenu(); smenu.hidden=false;
   const first=smenu.querySelector('button[data-w]:not(:disabled)'); if(first) first.focus();
 }
 function closeSwordMenu(){ if(!smenu.hidden){ smenu.hidden=true; canvas.focus(); } }
@@ -566,24 +617,28 @@ function nearShop(p){
 }
 function shopPlayer(){ return nearShop(me); }
 function computeAction3(){
-  if(weapon==='iron'||!shopPlayer()||me.petShop) return null;
+  if(weapon==='iron'||!shopPlayer()) return null;
   return {label:'Buy a better sword', run:openSwordMenu};
 }
 function computeAction2(){
-  if(!bridges.some(b=>b.intact)||!shopPlayer()||me.petShop) return null;
+  if(!bridges.some(b=>b.intact)||!shopPlayer()) return null;
   return {label:'Destroy a bridge for '+price(BRIDGE_COST)+' coins', run:openBridgeMenu};
+}
+function computeAction4(){
+  if(!shopPlayer()) return null;
+  return {label:'Buy a pet', run:openPetMenu};
 }
 const CHEST=interiors.house.items.find(it=>it.k==='chest');
 const cmenu=document.getElementById('cmenu'), chestCode=document.getElementById('chestCode'), chestStatus=document.getElementById('chestStatus');
 function nearChest(p){ return !!p && !p.down && !p.fadeDir && p.scene==='house' && distRect(p.x,p.y,CHEST)<p.r+40; }
 let codeKind='chest';
-const PLOT=Object.assign({w:100,h:70},plots[1]), PET_CODE='PSZB';
-function nearPlot(p){ return !!p && !p.down && !p.fadeDir && p.scene==='world' && distRect(p.x,p.y,PLOT)<p.r+16; }
-function openPlotMenu(){
+function nearPathEnd(p){ return !!p && !p.down && !p.fadeDir && p.scene==='world' && Math.abs(p.x-RX)<ROAD/2+40 && p.y>H-150; }
+const CHAT_CODE='DAGZ';
+function openPathMenu(){
   if(!cmenu.hidden){ closeChestMenu(); return; }
-  codeKind='plot';
-  document.getElementById('codeTitle').textContent='Something is scratched into the dirt';
-  document.getElementById('codeSub').textContent='Type a 4-character code.';
+  codeKind='chat';
+  document.getElementById('codeTitle').textContent='Something is written at the end of the path';
+  document.getElementById('codeSub').textContent='Type a 4-letter code.';
   closeBridgeMenu(); closeSwordMenu(); closePetMenu(); held.clear();
   chestCode.value=''; chestStatus.textContent=''; cmenu.hidden=false;
   setTimeout(()=>chestCode.focus(),0);
@@ -605,20 +660,14 @@ function claimTicket(p){
   chestTaken=true; p.ticket=true;
   showMsg(online() ? dn(p)+' found the discount ticket in the chest! Only '+dn(p)+' gets 50% off at the shop.' : 'You found a discount ticket in the chest! Everything at the shop is now 50% off.');
 }
-function togglePetShop(p){
-  if(!p||p.petShop) return;
-  p.petShop=true;
-  if(p===me){ closeSwordMenu(); closeBridgeMenu(); closePetMenu(); }
-  const who=online()?dn(p):'';
-  showMsg(who ? who+' unlocked pets! The shop now sells only pets to '+who+', for good.' : 'Pets unlocked! The shop now sells only pets, for good.');
-}
 function tryChest(raw){
   const code=cleanChestCode(raw);
-  if(codeKind==='plot'){
-    if(code!==PET_CODE){ chestStatus.textContent='Nothing happens.'; chestCode.select(); return; }
-    if(me&&me.petShop){ closeChestMenu(); showMsg('Pets are already unlocked. There is no going back.'); return; }
-    if(NET.mode==='client') netSend({t:'plot', code}); else togglePetShop(me);
-    closeChestMenu(); return;
+  if(codeKind==='chat'){
+    if(code!==CHAT_CODE){ chestStatus.textContent='Nothing happens.'; chestCode.select(); return; }
+    closeChestMenu();
+    if(chatOn){ showMsg('Clean chat is already on. Press T to chat.'); return; }
+    if(NET.mode==='client') netSend({t:'chaton', code}); else enableChat(me);
+    return;
   }
   if(code!==CHEST_CODE){ chestStatus.textContent='Wrong code. The chest stays locked.'; chestCode.select(); return; }
   if(NET.mode==='client') netSend({t:'chest', code});
@@ -629,7 +678,8 @@ document.getElementById('chestForm').addEventListener('submit',e=>{ e.preventDef
 chestCode.addEventListener('input',()=>{ chestCode.value=cleanChestCode(chestCode.value); chestStatus.textContent=''; });
 document.getElementById('chestCancel').addEventListener('click',closeChestMenu);
 document.getElementById('petCancel').addEventListener('click',()=>closePetMenu());
-const PETS={bird:{name:'Bird',cost:100}, cat:{name:'Cat',cost:200}, dog:{name:'Dog',cost:300}};
+const PETS={bird:{name:'Bird',cost:100,dmg:1}, cat:{name:'Cat',cost:200,dmg:2}, dog:{name:'Dog',cost:300,dmg:3}};
+const PET_CD=5, PET_RANGE=600;
 const pmenu=document.getElementById('pmenu');
 function syncPetMenu(){
   for(const btn of pmenu.querySelectorAll('button[data-pet]')){
@@ -640,13 +690,13 @@ function syncPetMenu(){
 }
 function openPetMenu(){
   if(!pmenu.hidden){ closePetMenu(); return; }
-  closeBridgeMenu(); closeSwordMenu(); syncPetMenu(); pmenu.hidden=false;
+  closeBridgeMenu(); closeSwordMenu(); closeChestMenu(); syncPetMenu(); pmenu.hidden=false;
   const first=pmenu.querySelector('button[data-pet]:not(:disabled)'); if(first) first.focus();
 }
 function closePetMenu(){ if(!pmenu.hidden){ pmenu.hidden=true; canvas.focus(); } }
 function buyPet(id,p){
   const n=interiors.shop.npc, P0=PETS[id];
-  if(!P0||!p||!p.petShop||p.pet===id) return;
+  if(!P0||!p||p.pet===id) return;
   const cost=price(P0.cost,p);
   if(coins<cost){ say(n,'The '+P0.name.toLowerCase()+' is '+cost+' coins.'); if(p===me) closePetMenu(); return; }
   coins-=cost; p.pet=id; p.petX=null;
@@ -656,18 +706,53 @@ function buyPet(id,p){
 }
 function pickPet(id){ if(NET.mode==='client'){ netSend({t:'pet',id}); closePetMenu(); } else buyPet(id,me); }
 pmenu.addEventListener('click',e=>{ const t=e.target.closest('button'); if(!t) return; if(t.dataset.pet) pickPet(t.dataset.pet); else closePetMenu(); });
+const petBtn=document.getElementById('petBtn');
+function setPetFight(p,on){
+  if(!p||!p.pet) return;
+  p.petFight=!!on; if(!on) p.petTarget=null;
+  if(p===me) showMsg(on ? 'Your '+PETS[p.pet].name.toLowerCase()+' is fighting! Press Q to call it back.' : 'Your '+PETS[p.pet].name.toLowerCase()+' is following you again.');
+}
+function togglePetFight(){
+  if(!me||!me.pet) return;
+  const on=!me.petFight;
+  if(NET.mode==='client'){ me.petFight=on; me.petFightUntil=performance.now()+700; netSend({t:'petfight', on:on?1:0}); showMsg(on ? 'Your '+PETS[me.pet].name.toLowerCase()+' is fighting! Press Q to call it back.' : 'Your '+PETS[me.pet].name.toLowerCase()+' is following you again.'); }
+  else setPetFight(me,on);
+}
+petBtn.addEventListener('click',()=>{ togglePetFight(); canvas.focus(); });
+function petAttacks(dt){
+  for(const p of players){
+    if(p.petCD>0) p.petCD=Math.max(0,p.petCD-dt);
+    if(!p.pet||!p.petFight||p.scene!=='world'||p.down){ p.petTarget=null; continue; }
+    let t=p.petTarget;
+    if(t && (!zombies.includes(t) || Math.hypot(t.x-p.x,t.y-p.y)>PET_RANGE+150)) t=null;
+    if(!t){ let bd=PET_RANGE; for(const z of zombies){ const d=Math.hypot(z.x-p.x,z.y-p.y); if(d<bd){ bd=d; t=z; } } }
+    p.petTarget=t||null;
+    if(!t||p.petX==null||p.petScene!=='world') continue;
+    if(!(p.petCD>0) && Math.hypot(t.x-p.petX,t.y-p.petY)<t.r+20){
+      const P0=PETS[p.pet];
+      t.hp-=P0.dmg/WEAPONS.wood.hits[t.level]; t.hitT=0.2;
+      p.petCD=PET_CD; p.petAtk=0.3;
+    }
+  }
+}
 function updatePets(dt){
   for(const p of players){
+    if(NET.mode==='client') p.petTarget=p.petTargetId?zombies.find(z=>z.id===p.petTargetId)||null:null;
     if(!p.pet){ p.petX=null; continue; }
-    const tx=p.x-p.fx*24+p.fy*14, ty=p.y-p.fy*20+6;
-    if(p.petX==null || p.petScene!==p.scene || Math.hypot(tx-p.petX,ty-p.petY)>400){ p.petX=tx; p.petY=ty; p.petScene=p.scene; p.petDir=1; p.petT=0; }
+    if(p.petAtk>0) p.petAtk-=dt;
+    const T=p.petTarget && zombies.includes(p.petTarget) && p.scene==='world' ? p.petTarget : null;
+    let tx=p.x-p.fx*24+p.fy*14, ty=p.y-p.fy*20+6;
+    if(T && p.petX!=null){ const ax=p.petX-T.x, ay=p.petY-T.y, ad=Math.hypot(ax,ay)||1; tx=T.x+ax/ad*(T.r+12); ty=T.y+ay/ad*(T.r+12); }
+    if(p.petX==null || p.petScene!==p.scene || (!T && Math.hypot(tx-p.petX,ty-p.petY)>400)){ p.petX=tx; p.petY=ty; p.petScene=p.scene; p.petDir=1; p.petT=0; }
     const dx=tx-p.petX, dy=ty-p.petY, d=Math.hypot(dx,dy);
     p.petMoving=d>6;
-    if(p.petMoving){ const step=Math.min(d, Math.max(90, d*5)*dt); p.petX+=dx/d*step; p.petY+=dy/d*step; if(Math.abs(dx)>2) p.petDir=dx>0?1:-1; p.petT+=dt; }
+    if(T && Math.abs(T.x-p.petX)>2) p.petDir=T.x>p.petX?1:-1;
+    if(p.petMoving){ const step=T ? Math.min(d,280*dt) : Math.min(d, Math.max(90, d*5)*dt); p.petX+=dx/d*step; p.petY+=dy/d*step; if(Math.abs(dx)>2) p.petDir=dx>0?1:-1; p.petT+=dt; }
   }
 }
 function drawPet(p){
-  const x=p.petX, y=p.petY, s=p.petDir||1, hop=p.petMoving?Math.abs(Math.sin(p.petT*12))*3:0;
+  const lunge=p.petAtk>0?Math.sin((1-p.petAtk/0.3)*Math.PI)*8:0;
+  const x=p.petX+(p.petDir||1)*lunge, y=p.petY, s=p.petDir||1, hop=p.petMoving?Math.abs(Math.sin(p.petT*12))*3:0;
   ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(x,y+7,9,3.5,0,0,7); ctx.fill();
   ctx.save(); ctx.translate(x,y-hop); ctx.scale(s,1); ctx.lineWidth=1.5;
   const dot=(cx,cy,r,c)=>{ ctx.fillStyle=c; ctx.beginPath(); ctx.arc(cx,cy,r,0,7); ctx.fill(); };
@@ -708,10 +793,9 @@ function computeActionFor(player){
     return {label:'Press the red button (skip to wave '+SKIP_BTN.wave+')', run:()=>{ SKIP_BTN.pressT=0.3; skipToWave(SKIP_BTN.wave); }};
   if(scene==='house' && distRect(player.x,player.y,CHEST)<player.r+34)
     return {label:chestTaken?'Open the chest':'Open the chest (code lock)', local:true, code:'chest', run:openChestMenu};
-  if(nearPlot(player)) return {label:'Look at the build plot', local:true, code:'plot', run:openPlotMenu};
+  if(nearPathEnd(player) && !chatOn) return {label:'Look at the end of the path', local:true, code:'chat', run:openPathMenu};
   if(scene==='shop'){
     const n=interiors.shop.npc;
-    if(Math.hypot(player.x-n.x,player.y-n.y)<170 && player.petShop) return {label:'Buy a pet', local:true, petMenu:true, run:openPetMenu};
     if(Math.hypot(player.x-n.x,player.y-n.y)<170) return {label:'Buy a wall for '+price(WALL_COST,player)+' coins', run:()=>buyWall(player)};
   }
   if(scene==='world' && wallInv>0){
@@ -721,7 +805,8 @@ function computeActionFor(player){
   }
   return null;
 }
-let lastBtn='', lastBtn2='', lastBtn3='', lastWeapon='', lastStats='', action3=null;
+let lastBtn='', lastBtn2='', lastBtn3='', lastBtn4='', lastWeapon='', lastStats='', action3=null, action4=null;
+const act4Btn=document.getElementById('act4');
 let lastHp=-1, lastThreat='', lastCore=-1;
 const coreEl=document.getElementById('core'), ticketEl=document.getElementById('ticket');
 function syncUI(){
@@ -750,7 +835,11 @@ function syncUI(){
   if(lbl3!==lastBtn3){ act3Btn.textContent=lbl3; act3Btn.hidden=!action3; lastBtn3=lbl3; }
   if(!action3) closeSwordMenu();
   if(!cmenu.hidden && !(action && action.code===codeKind)) closeChestMenu();
-  if(!pmenu.hidden && !(action && action.petMenu)) closePetMenu();
+  const lbl4=action4 ? action4.label+(touch?'':' (P)') : '';
+  if(lbl4!==lastBtn4){ act4Btn.textContent=lbl4; act4Btn.hidden=!action4; lastBtn4=lbl4; }
+  if(!action4) closePetMenu();
+  const pb=me&&me.pet ? (me.petFight?'Call '+PETS[me.pet].name.toLowerCase()+' back':PETS[me.pet].name+': fight')+(touch?'':' (Q)') : '';
+  if(petBtn.textContent!==pb){ petBtn.textContent=pb; petBtn.hidden=!pb; petBtn.classList.toggle('on',!!(me&&me.petFight)); }
   const hasT=!!(me&&me.ticket); if(ticketEl.hidden===hasT) ticketEl.hidden=!hasT;
   if(weapon!==lastWeapon){ weaponEl.textContent='Weapon: '+WEAPONS[weapon].name; lastWeapon=weapon; }
 }
@@ -762,6 +851,7 @@ function doSwing(){
 actBtn.addEventListener('click',()=>{ doUse(); canvas.focus(); });
 act2Btn.addEventListener('click',()=>{ if(action2) action2.run(); canvas.focus(); });
 act3Btn.addEventListener('click',()=>{ if(action3) action3.run(); canvas.focus(); });
+act4Btn.addEventListener('click',()=>{ if(action4) action4.run(); });
 function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=10, MAX_HP=5;
@@ -1089,6 +1179,7 @@ const held = new Set();
 function bindOf(p){ return SOLO_BIND; }
 function isMoveKey(code){ const B=SOLO_BIND; return B.u.includes(code)||B.d.includes(code)||B.l.includes(code)||B.r.includes(code); }
 window.addEventListener('keydown',e=>{
+  if(e.target && e.target.id==='chatInput') return;
   if(!modesEl.hidden){
     if(e.code==='Escape' && canResume()){ e.preventDefault(); closeModes(); }
     return;
@@ -1119,6 +1210,9 @@ window.addEventListener('keydown',e=>{
   if(e.code==='KeyE'||e.code==='Space'||e.code==='ShiftRight'){ e.preventDefault(); if(!e.repeat) doUse(); return; }
   if(e.code==='KeyB'){ e.preventDefault(); if(!e.repeat && action2) action2.run(); return; }
   if(e.code==='KeyG'){ e.preventDefault(); if(!e.repeat && action3) action3.run(); return; }
+  if(e.code==='KeyQ'){ e.preventDefault(); if(!e.repeat) togglePetFight(); return; }
+  if(e.code==='KeyT'){ if(chatOn){ e.preventDefault(); if(!e.repeat) openChat(); } return; }
+  if(e.code==='KeyP'){ e.preventDefault(); if(!e.repeat && action4) action4.run(); return; }
   if(e.code==='KeyF'||e.code==='KeyJ'||e.code==='Enter'||e.code==='NumpadEnter'){ e.preventDefault(); if(!e.repeat) doSwing(); return; }
   if(isMoveKey(e.code)){ held.add(e.code); e.preventDefault(); }
 });
@@ -1217,17 +1311,18 @@ function drawWall(R){
   else { for(let y=R.y;y<R.y+R.h;y+=24){ ctx.beginPath(); ctx.moveTo(R.x,y); ctx.lineTo(R.x+R.w,y); ctx.stroke(); } }
   ctx.strokeRect(R.x,R.y,R.w,R.h);
 }
-function drawSkipButton(){
-  const b=SKIP_BTN, down=(b.pressT||0)>0;
+function drawSkipButton(){ drawRedButton(SKIP_BTN,'Skip to wave '+SKIP_BTN.wave,'#A32D2D',false); }
+function drawRedButton(b,text,tcol,dim){
+  const down=(b.pressT||0)>0;
   ctx.fillStyle='rgba(0,0,0,.22)'; ctx.beginPath(); ctx.ellipse(b.x+3,b.y+8,b.r+12,(b.r+12)*0.5,0,0,7); ctx.fill();
   ctx.fillStyle='#888780'; ctx.beginPath(); ctx.ellipse(b.x,b.y+4,b.r+10,(b.r+10)*0.6,0,0,7); ctx.fill();
   ctx.strokeStyle='#5F5E5A'; ctx.lineWidth=2; ctx.stroke();
   const lift=down?1:6;
   ctx.fillStyle='#791F1F'; ctx.beginPath(); ctx.ellipse(b.x,b.y+2,b.r,b.r*0.6,0,0,7); ctx.fill();
-  ctx.fillStyle='#E24B4A'; ctx.beginPath(); ctx.ellipse(b.x,b.y+2-lift,b.r,b.r*0.6,0,0,7); ctx.fill();
+  ctx.fillStyle=dim?'#A35A5A':'#E24B4A'; ctx.beginPath(); ctx.ellipse(b.x,b.y+2-lift,b.r,b.r*0.6,0,0,7); ctx.fill();
   ctx.fillRect(b.x-b.r,b.y+2-lift,b.r*2,lift);
-  ctx.fillStyle='#F09595'; ctx.beginPath(); ctx.ellipse(b.x-6,b.y-2-lift,b.r*0.35,b.r*0.18,0,0,7); ctx.fill();
-  label('Skip to wave '+b.wave,b.x,b.y-34,'#A32D2D',15);
+  ctx.fillStyle=dim?'#C79A9A':'#F09595'; ctx.beginPath(); ctx.ellipse(b.x-6,b.y-2-lift,b.r*0.35,b.r*0.18,0,0,7); ctx.fill();
+  if(text) label(text,b.x,b.y-34,tcol,15);
 }
 function drawArrow(a){
   const ang=Math.atan2(a.vy,a.vx);
@@ -1464,6 +1559,7 @@ function update(dt){
     updateArrows(dt); if(defeated) return;
     separateZombies();
     updateDrops(dt);
+    petAttacks(dt);
     checkSwordHit();
   }
   if(defeated) return;
@@ -1793,8 +1889,8 @@ function frame(now){
   else if(modesEl.hidden) update(dt);
   updatePets(dt);
   if(NET.mode!=='client') for(const p of players) p.action=computeActionFor(p);
-  action=me?computeActionFor(me):null; if(me) me.action=action; action2=computeAction2(); action3=computeAction3();
-  syncUI(); syncNetInfo(); render(); requestAnimationFrame(frame);
+  action=me?computeActionFor(me):null; if(me) me.action=action; action2=computeAction2(); action3=computeAction3(); action4=computeAction4();
+  syncUI(); syncNetInfo(); renderChat(); render(); requestAnimationFrame(frame);
 }
 function resetPlayers(){
   if(NET.mode==='solo'){ players=[makePlayer(0)]; }
@@ -1805,7 +1901,7 @@ function resetPlayers(){
   for(const p of players){ const [tx,ty]=camTarget(p); p.camX=tx; p.camY=ty; }
   held.clear(); joy=null;
   hintEl.textContent=baseHint;
-  lastHp=-1; lastBtn=null; lastBtn2=null; lastBtn3=null;
+  lastHp=-1; lastBtn=null; lastBtn2=null; lastBtn3=null; lastBtn4=null;
 }
 const BASE_RECTS=rects.length;
 const resetBtn=document.getElementById('reset');
@@ -1814,7 +1910,7 @@ function resetGame(){
   if(NET.mode==='client') return;
   rects.length=BASE_RECTS;
   for(const sl of slots) sl.built=false;
-  coins=50; wallInv=0; chestTaken=false; for(const p of players){ p.ticket=false; p.petShop=false; p.pet=''; } closeChestMenu(); closePetMenu(); weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
+  coins=50; wallInv=0; chestTaken=false; chatOn=false; chatLog=[]; for(const p of players){ p.ticket=false; p.pet=''; p.petFight=false; p.petTarget=null; p.petCD=0; } closeChestMenu(); closePetMenu(); weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
   zombies=[]; drops=[]; arrows=[]; wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false; gameTime=0;
   core.hp=core.maxHp; core.hitT=0; defeated=false; NET.defKind=0; overEl.hidden=true;
   resetPlayers();
@@ -1836,7 +1932,7 @@ resetBtn.addEventListener('click',()=>{
 });
 
 const modesEl=document.getElementById('modes'), modesCancel=document.getElementById('modesCancel');
-const panels={main:document.getElementById('mMain'), host:document.getElementById('mHostPanel'), join:document.getElementById('mJoinPanel'), online:document.getElementById('mOnlinePanel'), watch:document.getElementById('mWatchPanel')};
+const panels={main:document.getElementById('mMain'), host:document.getElementById('mHostPanel'), join:document.getElementById('mJoinPanel'), online:document.getElementById('mOnlinePanel'), watch:document.getElementById('mWatchPanel'), friends:document.getElementById('mFriendsPanel')};
 const codeBox=document.getElementById('codeBox'), hostStatus=document.getElementById('hostStatus'), lobbyEl=document.getElementById('lobby'), lobby2El=document.getElementById('lobby2');
 const startBtn=document.getElementById('mStart'), joinStatus=document.getElementById('joinStatus'), joinCode=document.getElementById('joinCode');
 const mainStatus=document.getElementById('mainStatus'), onlineInfo=document.getElementById('onlineInfo'), netinfoEl=document.getElementById('netinfo');
@@ -1853,7 +1949,7 @@ function openModes(which){
   showPanel(which);
   modesCancel.hidden = !(which==='main' && NET.mode==='solo' && started);
   modesEl.hidden=false;
-  const f = which==='join' ? joinCode : (which==='main' && !cleanName(document.getElementById('nameInput').value)) ? document.getElementById('nameInput') : modesEl.querySelector('#'+panels[which].id+' button:not([disabled])');
+  const f = which==='join' ? joinCode : which==='friends' ? document.getElementById('friendSearch') : (which==='main' && !cleanName(document.getElementById('nameInput').value)) ? document.getElementById('nameInput') : modesEl.querySelector('#'+panels[which].id+' button:not([disabled])');
   if(f) setTimeout(()=>f.focus(),0);
 }
 function closeModes(){ modesEl.hidden=true; canvas.focus(); }
@@ -1873,7 +1969,7 @@ function syncNetInfo(){
 }
 
 const CODE_CHARS='ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
-const SECRET_CODE='ZBJO';
+const SECRET_CODE='BJD7';
 function newCode(){ let c; do{ c=''; for(let i=0;i<4;i++) c+=CODE_CHARS[Math.floor(Math.random()*CODE_CHARS.length)]; }while(c===SECRET_CODE); return c; }
 function peerId(code){ return 'village-defense-v1-'+code.toLowerCase(); }
 function PeerClass(){ return window.VD_FAKE_PEER || window.Peer; }
@@ -1987,20 +2083,22 @@ function onHostData(p,d){
   } else if(d.t==='swing'){ if(NET.started) swingSword(p); }
   else if(d.t==='use'){ if(!NET.started||defeated) return; const a=computeActionFor(p); if(a&&!a.local) a.run(); }
   else if(d.t==='chest'){ if(nearChest(p) && cleanChestCode(d.code)===CHEST_CODE) claimTicket(p); }
-  else if(d.t==='bridge'){ if(nearShop(p)&&!p.petShop) destroyBridge(String(d.id),p); }
-  else if(d.t==='sword'){ if(nearShop(p)&&!p.petShop) buySword(String(d.id),p); }
-  else if(d.t==='plot'){ if(nearPlot(p) && cleanChestCode(d.code)===PET_CODE) togglePetShop(p); }
+  else if(d.t==='bridge'){ if(nearShop(p)) destroyBridge(String(d.id),p); }
+  else if(d.t==='sword'){ if(nearShop(p)) buySword(String(d.id),p); }
+  else if(d.t==='chaton'){ if(nearPathEnd(p) && cleanChestCode(d.code)===CHAT_CODE) enableChat(p); }
+  else if(d.t==='chat'){ postChat(p,d.text); }
+  else if(d.t==='petfight'){ setPetFight(p,!!d.on); }
   else if(d.t==='pet'){ if(nearShop(p)) buyPet(String(d.id),p); }
 }
 const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
 function npcState(n){ const left=n.sayUntil-performance.now(); return [r1(n.x),r1(n.y),r2(n.fx||0),r2(n.fy==null?1:n.fy),n.moving?1:0,r2(n.t||0),left>0?n.say:'',left>0?Math.round(left):0]; }
 function snapshot(){
   return {t:'snap', st:NET.started?1:0,
-    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'',p.ticket?1:0,p.petShop?1:0,p.pet||'']),
+    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'',p.ticket?1:0,p.pet||'',p.petFight?1:0,p.petTarget?p.petTarget.id:0,r1(p.petCD||0)]),
     z:zombies.map(z=>[z.id,z.level,r1(z.x),r1(z.y),r2(z.fx),r2(z.fy),r2(z.hp),r2(z.hitT),r2(z.atkT),z.inWater?1:0,z.shooting?1:0,r2(z.t),z.aggro?1:0,z.reached?1:0,r2(z.atkCD)]),
     ar:arrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy)]),
     dr:drops.map(c=>[r1(c.x),r1(c.y),c.value,r2(c.t)]),
-    core:[core.hp,r2(core.hitT)], co:coins, tk:chestTaken?1:0, wa:wallInv, we:weapon, wv:wave, wt:r2(waveTimer), wl:waveLive?1:0, dn:allDone?1:0, sq:spawnQueue.length,
+    core:[core.hp,r2(core.hitT)], co:coins, tk:chestTaken?1:0, ch:chatOn?1:0, cl:chatLog.slice(-8).map(m=>[m.id,m.n,m.c,m.t]), wa:wallInv, we:weapon, wv:wave, wt:r2(waveTimer), wl:waveLive?1:0, dn:allDone?1:0, sq:spawnQueue.length,
     br:bridges.map(b=>b.intact?1:0), sl:slots.map(q=>q.built?1:0),
     msg:[NET.msgId, msgEl.textContent ? NET.msgText : ''],
     nh:npcState(interiors.house.npc), ns:npcState(interiors.shop.npc),
@@ -2079,11 +2177,13 @@ function applySnap(d){
   if(NET.started && !wasStarted && !modesEl.hidden && (panels.join.hidden===false)){ started=true; closeModes(); showMsg('You joined as '+(me?dn(me):myName)+'. Good luck!'); }
   const seen=new Set();
   for(const a of d.pl){
-    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm,tk,ps,pt]=a;
+    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm,tk,pt,pf,ptid,pcd]=a;
     seen.add(slot);
     let p=players.find(q=>q.i===slot);
     if(!p){ p=makePlayer(slot); p.tp=-1; p.x=x; p.y=y; players.push(p); players.sort((u,v)=>u.i-v.i); }
-    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.name=cleanName(nm); p.ticket=!!tk; if(p===me&&!ps&&p.petShop) closePetMenu(); p.petShop=!!ps; p.pet=PETS[pt]?pt:'';
+    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.name=cleanName(nm); p.ticket=!!tk; p.pet=PETS[pt]?pt:'';
+    if(!(p===me && performance.now()<(me.petFightUntil||0))) p.petFight=!!pf;
+    p.petTargetId=ptid||0; if((pcd||0)>(p.petCD||0)+1) p.petAtk=0.3; p.petCD=pcd||0;
     if(slot===NET.slot){
       if(me!==p){ me=p; p.view={x:0,y:0,w:CW,h:CH}; }
       if(tp!==p.tp){
@@ -2108,7 +2208,7 @@ function applySnap(d){
   arrows=d.ar.map(a=>({x:a[0],y:a[1],vx:a[2],vy:a[3]}));
   drops=d.dr.map(a=>({x:a[0],y:a[1],value:a[2],t:a[3]}));
   core.hp=d.core[0]; core.hitT=d.core[1];
-  coins=d.co; chestTaken=!!d.tk; wallInv=d.wa; weapon=d.we; wave=d.wv; waveTimer=d.wt; waveLive=!!d.wl; allDone=!!d.dn; spawnQueue=new Array(d.sq).fill(1);
+  coins=d.co; chestTaken=!!d.tk; chatOn=!!d.ch; if(Array.isArray(d.cl)) chatLog=d.cl.map(m=>({id:m[0]|0, n:cleanName(m[1]), c:(m[2]|0), t:String(m[3]||'').slice(0,120)})); wallInv=d.wa; weapon=d.we; wave=d.wv; waveTimer=d.wt; waveLive=!!d.wl; allDone=!!d.dn; spawnQueue=new Array(d.sq).fill(1);
   let changed=false;
   d.br.forEach((v,i)=>{ if(bridges[i].intact!==!!v){ bridges[i].intact=!!v; changed=true; } });
   d.sl.forEach((v,i)=>{ if(slots[i].built!==!!v){ slots[i].built=!!v; changed=true; } });
@@ -2187,7 +2287,7 @@ buildWalk();
 resetPlayers();
 requestAnimationFrame(frame);
 
-/* ---------- live player list (secret code ZBJO) ----------
+/* ---------- live player list (secret code BJD7) ----------
    Every open copy of the game reports its status to one shared "directory".
    The first copy to claim the directory ID becomes the directory; when it closes,
    the others race to take over and report again. */
@@ -2195,13 +2295,13 @@ const DIR_ID='village-defense-v1-directory';
 const PRES={sid:Math.random().toString(36).slice(2,12), peer:null, role:'none', dirConn:null, entries:new Map(), retry:0, listCb:null, listTimer:0, starting:false};
 function myInfo(){
   return {mode:NET.mode, code:(NET.mode==='solo'?'':NET.code)||'', started:(NET.mode==='solo'?started:NET.started)?1:0, menu:modesEl.hidden?0:1,
-    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid, pid:PRES.role==='dir'?DIR_ID:(PRES.peer&&PRES.peer.id)||'', name:myName, names:NET.mode==='host'?players.map(dn):[]};
+    wave:wave, waves:WAVES.length, players:players.length, core:core.hp, done:allDone?1:0, slot:NET.slot|0, joined:NET.joined?1:0, sid:PRES.sid, uid:MYUID, pid:PRES.role==='dir'?DIR_ID:(PRES.peer&&PRES.peer.id)||'', name:myName, names:NET.mode==='host'?players.map(dn):[]};
 }
 function cleanInfo(i){
   if(!i||typeof i!=='object') return null;
   const n=(v,lo,hi)=>Math.max(lo,Math.min(hi,Math.round(+v||0)));
   return {mode:['solo','host','client'].includes(i.mode)?i.mode:'solo', code:String(i.code||'').toUpperCase().replace(/[^A-Z0-9]/g,'').slice(0,4),
-    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12), pid:String(i.pid||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,64), name:cleanName(i.name), names:Array.isArray(i.names)?i.names.slice(0,4).map(cleanName).filter(Boolean):[]};
+    started:i.started?1:0, menu:i.menu?1:0, wave:n(i.wave,0,999), waves:n(i.waves,0,999), players:n(i.players,0,4), core:n(i.core,0,100), done:i.done?1:0, slot:n(i.slot,0,3), joined:i.joined?1:0, sid:String(i.sid||'').replace(/[^a-z0-9]/g,'').slice(0,12), uid:String(i.uid||'').replace(/[^a-z0-9]/g,'').slice(0,16), pid:String(i.pid||'').replace(/[^A-Za-z0-9_-]/g,'').slice(0,64), name:cleanName(i.name), names:Array.isArray(i.names)?i.names.slice(0,4).map(cleanName).filter(Boolean):[]};
 }
 function presReset(ms){
   const p=PRES.peer; PRES.peer=null; PRES.dirConn=null; PRES.role='none'; PRES.starting=false; PRES.entries.clear();
@@ -2222,6 +2322,7 @@ function presStart(){
       if(d.t==='info'){ const info=cleanInfo(d.info); if(info) PRES.entries.set(conn,{info,last:performance.now()}); }
       else if(d.t==='list'){ try{ conn.send({t:'list', items:dirList()}); }catch(e){} }
       else if(d.t==='ask') answerAsk(conn);
+      else if(d.t==='friendreq') onFriendReq(conn,d);
     });
     conn.on('close',()=>PRES.entries.delete(conn));
     conn.on('error',()=>PRES.entries.delete(conn));
@@ -2239,7 +2340,7 @@ function presJoinDir(){
   const P=PeerClass(); let peer;
   try{ peer=new P({debug:0}); }catch(e){ PRES.starting=false; return; }
   PRES.peer=peer; PRES.role='member';
-  peer.on('connection',conn=>{ conn.on('data',d=>{ if(PRES.peer===peer && d && d.t==='ask') answerAsk(conn); }); });
+  peer.on('connection',conn=>{ conn.on('data',d=>{ if(PRES.peer!==peer || !d) return; if(d.t==='ask') answerAsk(conn); else if(d.t==='friendreq') onFriendReq(conn,d); }); });
   peer.on('open',()=>{
     if(PRES.peer!==peer) return;
     PRES.starting=false;
@@ -2314,17 +2415,18 @@ function refreshWatch(){
 }
 const watchStatus=document.getElementById('watchStatus');
 let askSeq=0;
-function askToJoin(pid,name){
+function askToJoin(pid,name,statusEl,panelName){
+  const st=statusEl||watchStatus, pn=panelName||'watch';
   const who=name||'That player', my=++askSeq, peer=PRES.peer;
-  watchStatus.textContent='Asking '+who+' to open their game…';
-  if(!peer||!pid||PRES.role==='none'){ watchStatus.textContent='Not connected to the player list yet. Try again in a moment.'; return; }
+  st.textContent='Asking '+who+' to open their game…';
+  if(!peer||!pid||PRES.role==='none'){ st.textContent='Not connected to the player list yet. Try again in a moment.'; return; }
   let c, done=false, timer=0;
   const finish=(code,msg)=>{
     if(done) return; done=true; clearTimeout(timer);
     setTimeout(()=>{ try{ c&&c.close(); }catch(e){} },1500);
-    if(my!==askSeq || panels.watch.hidden || modesEl.hidden) return;
-    if(code){ watchStatus.textContent=''; openModes('join'); joinCode.value=code; joinGame(code); }
-    else watchStatus.textContent=msg;
+    if(my!==askSeq || panels[pn].hidden || modesEl.hidden) return;
+    if(code){ st.textContent=''; openModes('join'); joinCode.value=code; joinGame(code); }
+    else st.textContent=msg;
   };
   try{ c=peer.connect(pid,{reliable:true,serialization:'json'}); }catch(e){ finish(null,'Could not reach '+who+'.'); return; }
   c.on('open',()=>{ try{ c.send({t:'ask'}); }catch(e){} });
@@ -2347,11 +2449,169 @@ setInterval(()=>{
   if(PRES.role==='member' && PRES.dirConn && PRES.dirConn.open!==false){ try{ PRES.dirConn.send({t:'info', info:myInfo()}); }catch(e){} }
   if(PRES.role==='dir'){ const now=performance.now(); for(const [c,e] of PRES.entries) if(now-e.last>15000) PRES.entries.delete(c); }
   if(!modesEl.hidden && !panels.watch.hidden) refreshWatch();
+  if(!modesEl.hidden && !panels.friends.hidden) refreshFriends();
 },2500);
 
 openModes('main');
 setTimeout(presStart, 300);
-if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,ticket:()=>chestTaken,PETS,price,set:(k,v)=>{ if(k==='coins') coins=v; }});
+/* ---------- clean chat ---------- */
+let chatOn=false, chatLog=[], chatSeq=0, chatShown='';
+const chatBox=document.getElementById('chatBox'), chatLogEl=document.getElementById('chatLog'), chatForm=document.getElementById('chatForm'), chatInput=document.getElementById('chatInput');
+if(chatBox.style) chatBox.style.bottom=(MH+30)+'px';
+const BAD_IN=['fuck','shit','bitch','cunt','nigg','fagg','whore','slut','pussy','penis','vagin','porn','retard','bastard','asshole','douche','wanker','twat','dildo','boner','horny','rapist','nazi'];
+const BAD_EQ=['ass','asses','dick','dicks','cock','cocks','damn','crap','piss','fag','fags','sex','sexy','kys','wtf','stfu','boob','boobs','nude','nudes','prick','hoe','hoes','jackass','dumbass','rape','tits','titty'];
+function normWord(w){ return w.toLowerCase().replace(/0/g,'o').replace(/[1!|]/g,'i').replace(/3/g,'e').replace(/[4@]/g,'a').replace(/[5$]/g,'s').replace(/7/g,'t').replace(/[^a-z]/g,'').replace(/(.)\1+/g,'$1'); }
+function badWord(w){ const n=normWord(w); if(!n) return false; const n2=w.toLowerCase().replace(/[^a-z]/g,''); return BAD_IN.some(r=>n.includes(r.replace(/(.)\1+/g,'$1'))||n2.includes(r)) || BAD_EQ.includes(n) || BAD_EQ.includes(n2); }
+function cleanChat(raw){
+  let t=String(raw==null?'':raw).replace(/[\u0000-\u001f\u007f<>]/g,'').replace(/\s+/g,' ').trim().slice(0,80);
+  t=t.replace(/(https?:\/\/|www\.)\S+/gi,'[link removed]').replace(/\b[\w-]+\.(com|net|org|io|gg|co|me|tv|xyz|ly)\b\S*/gi,'[link removed]');
+  t=t.replace(/\d[\d\s().-]{4,}\d/g,'###');
+  t=t.replace(/k+\W*i+\W*l+\W*l+\W*(your|ur|u)?\W*s+\W*e+\W*l+\W*f+/gi,'****');
+  t=t.split(/(\s+)/).map(w=>/\s/.test(w)||!badWord(w)?w:w.replace(/[^\s]/g,'*')).join('');
+  return t.trim();
+}
+function enableChat(p){
+  if(chatOn) return;
+  chatOn=true;
+  pushChat(null,(online()&&p?dn(p)+' turned on':'You turned on')+' clean chat. Press T to talk. Bad words, links and phone numbers are blocked.');
+  showMsg((online()&&p?dn(p)+' turned on':'You turned on')+' clean chat! Press T to chat.');
+}
+function pushChat(p,text){ chatLog.push({id:++chatSeq, n:p?(dn(p)||'You'):'', c:p?p.i:-1, t:text}); if(chatLog.length>30) chatLog.splice(0,chatLog.length-30); }
+function postChat(p,raw){
+  if(!chatOn||!p) return;
+  const now=performance.now(); if(p.chatT && now-p.chatT<700) return; p.chatT=now;
+  const t=cleanChat(raw); if(!t) return;
+  pushChat(p,t);
+}
+function renderChat(){
+  if(chatBox.hidden===chatOn) chatBox.hidden=!chatOn;
+  if(!chatOn){ if(!chatForm.hidden) closeChat(); return; }
+  const last=chatLog.slice(-6), key=last.map(m=>m.id).join(',');
+  if(key===chatShown) return; chatShown=key;
+  chatLogEl.innerHTML=last.map(m=>m.c<0?'<li class="sys">'+esc(m.t)+'</li>':'<li><b style="color:'+(['#85B7EB','#F09595','#AFA9EC','#5DCAA5'][m.c]||'#FAC775')+'">'+esc(m.n)+':</b> '+esc(m.t)+'</li>').join('');
+}
+function openChat(){ if(!chatOn) return; held.clear(); chatForm.hidden=false; chatInput.value=''; chatInput.focus(); }
+function closeChat(){ chatForm.hidden=true; chatInput.blur(); canvas.focus(); }
+chatForm.addEventListener('submit',e=>{
+  e.preventDefault();
+  const t=chatInput.value; closeChat();
+  if(!cleanChat(t)) return;
+  if(NET.mode==='client') netSend({t:'chat', text:String(t).slice(0,80)}); else postChat(me,t);
+});
+chatInput.addEventListener('keydown',e=>{ if(e.key==='Escape'){ e.preventDefault(); closeChat(); } });
+document.getElementById('chatOpen').addEventListener('click',()=>chatForm.hidden?openChat():closeChat());
+
+/* ---------- friends ---------- */
+let MYUID=''; try{ MYUID=String(localStorage.getItem('vd-uid')||'').replace(/[^a-z0-9]/g,'').slice(0,16); }catch(e){}
+if(MYUID.length<8){ MYUID=(Math.random().toString(36).slice(2)+Math.random().toString(36).slice(2)).replace(/[^a-z0-9]/g,'').slice(0,16); try{ localStorage.setItem('vd-uid',MYUID); }catch(e){} }
+let friends=[]; try{ const v=JSON.parse(localStorage.getItem('vd-friends')||'[]'); if(Array.isArray(v)) friends=v.filter(x=>x&&typeof x.uid==='string').map(x=>({uid:x.uid.replace(/[^a-z0-9]/g,'').slice(0,16), name:cleanName(x.name)||'Friend'})); }catch(e){}
+function saveFriends(){ try{ localStorage.setItem('vd-friends',JSON.stringify(friends)); }catch(e){} }
+function isFriend(uid){ return !!uid && friends.some(x=>x.uid===uid); }
+function addFriend(uid,name){ if(!uid||uid===MYUID) return; const f=friends.find(x=>x.uid===uid); if(f) f.name=name||f.name; else friends.push({uid,name:name||'Friend'}); saveFriends(); }
+const friendStatus=document.getElementById('friendStatus'), friendResults=document.getElementById('friendResults'), friendList=document.getElementById('friendList'), friendSearch=document.getElementById('friendSearch');
+let lastItems=[], friendSeq=0;
+function openFriends(){
+  openModes('friends'); friendStatus.textContent=''; friendResults.innerHTML='';
+  refreshFriends();
+}
+function statusOf(it){
+  if(!it) return {text:'Offline'};
+  const mine=myInfo();
+  if((it.mode==='host'||it.mode==='client') && it.code){
+    if((mine.mode==='host'||mine.mode==='client') && mine.code===it.code) return {text:'In your game'};
+    const w=it.mode==='host' ? (it.started?(it.wave?'wave '+it.wave+' of '+it.waves:'before wave 1'):'waiting to start') : 'online game';
+    return {text:'Online game '+it.code+', '+w, code:(it.mode!=='host'||it.players<4)?it.code:''};
+  }
+  if(!it.started) return {text:'Online, in the menu'};
+  if(it.done) return {text:'Playing solo, all waves cleared'};
+  return {text:'Playing solo, '+(it.wave?'wave '+it.wave+' of '+it.waves:'before wave 1'), pid:it.pid};
+}
+function renderFriendList(){
+  if(!friends.length){ friendList.innerHTML='<li>No friends yet. Search for a username above.</li>'; return; }
+  const rows=friends.map(fr=>{
+    const it=lastItems.find(x=>x.uid===fr.uid && x.started) || lastItems.find(x=>x.uid===fr.uid);
+    if(it && it.name && it.name!==fr.name){ fr.name=it.name; saveFriends(); }
+    const st=statusOf(it);
+    const join=st.code ? '<button type="button" class="wjoin" data-fcode="'+esc(st.code)+'">Join</button>' : st.pid ? '<button type="button" class="wjoin" data-fpid="'+esc(st.pid)+'" data-name="'+esc(fr.name)+'">Join</button>' : '';
+    return {online:!!it, html:'<li><div class="wmain"><b>'+esc(fr.name)+'</b><span>'+esc(st.text)+'</span></div>'+join+'<button type="button" class="wrem" data-rem="'+esc(fr.uid)+'" aria-label="Remove '+esc(fr.name)+' from friends">Remove</button></li>'};
+  });
+  rows.sort((a,b)=>b.online-a.online);
+  friendList.innerHTML=rows.map(r=>r.html).join('');
+}
+function refreshFriends(){
+  requestList(items=>{
+    if(panels.friends.hidden||modesEl.hidden) return;
+    if(Array.isArray(items)) lastItems=items;
+    else if(items===null) friendStatus.textContent=friendStatus.textContent||'Could not reach the player list. Check your internet connection.';
+    renderFriendList();
+  });
+}
+function searchFriends(raw){
+  const q=cleanName(raw); friendSearch.value=q;
+  if(!q){ friendStatus.textContent='Type a username to search for.'; return; }
+  friendStatus.textContent='Searching…'; friendResults.innerHTML='';
+  requestList(items=>{
+    if(panels.friends.hidden||modesEl.hidden) return;
+    if(items===undefined){ friendStatus.textContent='Connecting to the player list… try again in a moment.'; return; }
+    if(items===null){ friendStatus.textContent='Could not reach the player list. Check your internet connection.'; return; }
+    lastItems=items;
+    const hits=items.filter(it=>it.sid!==PRES.sid && it.uid && it.uid!==MYUID && it.name && it.name.toLowerCase()===q.toLowerCase());
+    const seen=new Set(), uniq=hits.filter(it=>!seen.has(it.uid)&&seen.add(it.uid));
+    if(!uniq.length){ friendStatus.textContent='No one called '+q+' is online right now. They have to have the game open to be found.'; renderFriendList(); return; }
+    friendStatus.textContent=uniq.length===1?'Found 1 player.':'Found '+uniq.length+' players with that name.';
+    friendResults.innerHTML=uniq.map(it=>'<li><div class="wmain"><b>'+esc(it.name)+'</b><span>'+esc(statusOf(it).text)+'</span></div>'+(isFriend(it.uid)?'<span class="note">Already friends</span>':'<button type="button" class="wjoin" data-add="'+esc(it.pid)+'" data-uid="'+esc(it.uid)+'" data-name="'+esc(it.name)+'">Add friend</button>')+'</li>').join('');
+    renderFriendList();
+  });
+}
+function sendFriendReq(pid,uid,name){
+  const peer=PRES.peer, my=++friendSeq;
+  if(!peer||!pid||PRES.role==='none'){ friendStatus.textContent='Not connected to the player list yet. Try again in a moment.'; return; }
+  friendStatus.textContent='Friend request sent to '+name+'. Waiting for them to accept…';
+  let c, done=false, timer=0;
+  const finish=msg=>{ if(done) return; done=true; clearTimeout(timer); setTimeout(()=>{ try{ c&&c.close(); }catch(e){} },1000); if(my===friendSeq && !panels.friends.hidden) friendStatus.textContent=msg; };
+  try{ c=peer.connect(pid,{reliable:true,serialization:'json'}); }catch(e){ finish('Could not reach '+name+'.'); return; }
+  c.on('open',()=>{ try{ c.send({t:'friendreq', from:{uid:MYUID, name:myName}}); }catch(e){} });
+  c.on('data',d=>{
+    if(!d||d.t!=='friendres') return;
+    if(d.ok){ addFriend(String(d.uid||uid).replace(/[^a-z0-9]/g,'').slice(0,16)||uid, cleanName(d.name)||name); finish(name+' accepted! You can join them whenever they are online.'); renderFriendList(); friendResults.innerHTML=''; }
+    else finish(d.busy ? name+' is busy with another request. Try again in a moment.' : name+' declined your friend request.');
+  });
+  c.on('error',()=>finish('Could not reach '+name+'.'));
+  timer=setTimeout(()=>finish(name+' did not answer.'),40000);
+}
+const freqEl=document.getElementById('freq'), freqText=document.getElementById('freqText');
+let freqCur=null;
+function onFriendReq(conn,d){
+  const from=d.from||{}, uid=String(from.uid||'').replace(/[^a-z0-9]/g,'').slice(0,16), name=cleanName(from.name);
+  if(!uid||!name||uid===MYUID) return;
+  const reply=(ok,busy)=>{ try{ conn.send({t:'friendres', ok:ok?1:0, busy:busy?1:0, uid:MYUID, name:myName}); }catch(e){} };
+  if(isFriend(uid)){ addFriend(uid,name); reply(true); return; }
+  if(freqCur){ reply(false,true); return; }
+  freqCur={conn,uid,name,reply,timer:setTimeout(()=>answerFriendReq(false),30000)};
+  freqText.textContent=name+' wants to be your friend. Friends can join your game any time you are online.';
+  freqEl.hidden=false;
+  conn.on('close',()=>{ if(freqCur&&freqCur.conn===conn){ clearTimeout(freqCur.timer); freqCur=null; freqEl.hidden=true; } });
+}
+function answerFriendReq(ok){
+  const cur=freqCur; if(!cur) return;
+  freqCur=null; clearTimeout(cur.timer); freqEl.hidden=true;
+  if(ok){ addFriend(cur.uid,cur.name); showMsg('You and '+cur.name+' are now friends.'); if(!panels.friends.hidden) renderFriendList(); }
+  cur.reply(ok);
+  if(modesEl.hidden) canvas.focus();
+}
+document.getElementById('freqYes').addEventListener('click',()=>answerFriendReq(true));
+document.getElementById('freqNo').addEventListener('click',()=>answerFriendReq(false));
+document.getElementById('mFriends').addEventListener('click',()=>{ if(needName()) openFriends(); });
+document.getElementById('mFriends2').addEventListener('click',openFriends);
+document.getElementById('mFriendsBack').addEventListener('click',()=>openModes(online()?'online':'main'));
+document.getElementById('friendForm').addEventListener('submit',e=>{ e.preventDefault(); searchFriends(friendSearch.value); });
+friendResults.addEventListener('click',e=>{ const b=e.target.closest('button[data-add]'); if(b){ b.disabled=true; sendFriendReq(b.dataset.add,b.dataset.uid,b.dataset.name); } });
+friendList.addEventListener('click',e=>{
+  const j=e.target.closest('button[data-fcode]'); if(j){ openModes('join'); joinCode.value=j.dataset.fcode; joinGame(j.dataset.fcode); return; }
+  const p=e.target.closest('button[data-fpid]'); if(p){ askToJoin(p.dataset.fpid,p.dataset.name,friendStatus,'friends'); return; }
+  const r=e.target.closest('button[data-rem]'); if(r){ friends=friends.filter(x=>x.uid!==r.dataset.rem); saveFriends(); renderFriendList(); }
+});
+if(window.VD_TEST) window.VD_TEST.get=()=>({players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,ticket:()=>chestTaken,PETS,friends:()=>friends,chat:()=>({on:chatOn,log:chatLog}),cleanChat,uid:()=>MYUID,price,set:(k,v)=>{ if(k==='coins') coins=v; }});
 })();
 </script>
 </body>
