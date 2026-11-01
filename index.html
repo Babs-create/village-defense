@@ -332,7 +332,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
   </div></div>
   <div id="chatBox" hidden aria-label="Clean chat"><div id="chatHead"><span>Clean chat</span><button type="button" id="chatOpen">Chat (T)</button></div><ul id="chatLog" aria-live="polite"></ul><form id="chatForm" hidden><input id="chatInput" maxlength="80" autocomplete="off" placeholder="Say something nice" aria-label="Chat message"><button type="submit">Send</button></form></div>
   <div id="freq" hidden role="alertdialog" aria-labelledby="freqText"><p id="freqText"></p><div class="row"><button type="button" id="freqYes">Accept</button><button type="button" id="freqNo">Decline</button></div></div>
-  <div id="over" hidden><div><h2 id="overT">You were defeated</h2><p id="overP">The zombie got you. Your coins and walls are kept.</p><button id="retry" type="button" data-host-only>Try again</button></div></div>
+  <div id="over" hidden><div><h2 id="overT">You were defeated</h2><p id="overP">The zombie got you. Everything will be reset.</p><button id="retry" type="button" data-host-only>Try again</button></div></div>
 </div>
 <script>
 /* PeerJS 1.5.5 (MIT License, Copyright (c) 2015 Michelle Bu and Eric Zhang, https://peerjs.com) */
@@ -649,9 +649,9 @@ function placeWall(sl){
   showMsg(left ? `Wall placed. ${left} open spots left.` : 'Every side of the village is walled.');
 }
 const WEAPONS={
-  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,5:11,6:13,7:15,8:17,9:19,s1:3,s2:5,s3:7,imp:3}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
-  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,5:10,6:12,7:14,8:16,9:18,s1:2,s2:4,s3:6,imp:2}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
-  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,5:9,6:11,7:13,8:15,9:17,s1:1,s2:3,s3:5,imp:1}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
+  wood:{name:'Wooden sword', rank:0, cost:0, hits:{1:3,2:5,3:7,4:9,5:11,6:13,7:15,8:17,9:19,s1:3,s2:5,s3:7,s4:9,imp:3}, blade:'#D4A35A', edge:'#633806', line:'#BA7517'},
+  stone:{name:'Stone sword', rank:1, cost:100, hits:{1:2,2:4,3:6,4:8,5:10,6:12,7:14,8:16,9:18,s1:2,s2:4,s3:6,s4:8,imp:2}, blade:'#B4B2A9', edge:'#444441', line:'#888780'},
+  iron:{name:'Iron sword', rank:2, cost:200, hits:{1:1,2:3,3:5,4:7,5:9,6:11,7:13,8:15,9:17,s1:1,s2:3,s3:5,s4:7,imp:1}, blade:'#E6EBF0', edge:'#2C2C2A', line:'#B4B2A9'}
 };
 let weapon='wood';
 const act3Btn=document.getElementById('act3'), weaponEl=document.getElementById('weapon');
@@ -954,7 +954,7 @@ act5Btn.addEventListener('click',()=>{ if(action5) action5.run(); });
 function swingSword(p){ if(!p||defeated||p.fadeDir||p.down||p.swing>0) return; p.swing=SWING_T; p.swingId++; }
 
 const WAVE_DELAY=5, MAX_HP=5;
-const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6},{count:1,level:'s2'},{count:1,level:7},{count:2,level:7},{count:3,level:7},{count:1,level:8},{count:2,level:8},{count:3,level:8},{count:1,level:9},{count:2,level:9},{count:3,level:9},{count:1,level:'s3'},{count:1,level:'imp'},{count:2,level:'imp'},{count:3,level:'imp'},{count:4,level:'imp'}];
+const WAVES=[{count:1,level:1},{count:2,level:1},{count:3,level:1},{count:1,level:2},{count:2,level:2},{count:3,level:2},{count:1,level:3},{count:2,level:3},{count:3,level:3},{count:1,level:'s1'},{count:1,level:4},{count:2,level:4},{count:3,level:4},{count:1,level:5},{count:2,level:5},{count:3,level:5},{count:1,level:6},{count:2,level:6},{count:3,level:6},{count:1,level:'s2'},{count:1,level:7},{count:2,level:7},{count:3,level:7},{count:1,level:8},{count:2,level:8},{count:3,level:8},{count:1,level:9},{count:2,level:9},{count:3,level:9},{count:1,level:'s3'},{count:1,level:'imp'},{count:2,level:'imp'},{count:3,level:'imp'},{count:4,level:'imp'},{count:5,level:'imp'},{count:6,level:'imp'},{count:7,level:'imp'},{count:8,level:'imp'},{count:9,level:'imp'},{count:1,level:'s4'}];
 const ZLEVEL={
   1:{hp:3,speed:85,coreDmg:5,reward:5,r:14,scale:1,arm:'#639922',shirt:'#5F5E5A',patch:'#888780',skin:'#97C459',skinEdge:'#3B6D11'},
   2:{hp:5,speed:85,coreDmg:10,reward:10,r:17,scale:1.25,arm:'#3B6D11',shirt:'#2C2C2A',patch:'#712B13',skin:'#639922',skinEdge:'#173404'},
@@ -962,6 +962,7 @@ const ZLEVEL={
   s1:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 1',hp:3,speed:51,coreDmg:5,reward:5,r:14,scale:1,ranged:true,range:420,fireCD:2,arrowSpeed:380},
   s2:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 2',hp:5,speed:51,coreDmg:10,reward:10,r:17,scale:1.25,ranged:true,range:420,fireCD:2,arrowSpeed:380,bone:'#E3D9BF',eye:'#A32D2D'},
   s3:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 3',hp:7,speed:51,coreDmg:15,reward:15,r:20,scale:1.45,ranged:true,range:420,fireCD:2,arrowSpeed:380,bone:'#D3C7A8',eye:'#534AB7'},
+  s4:{kind:'skeleton',noun:'skeleton',label:'Skeleton Lv 4',hp:9,speed:51,coreDmg:20,reward:20,r:23,scale:1.65,ranged:true,range:420,fireCD:2,arrowSpeed:380,bone:'#C2B48E',eye:'#EF9F27'},
   9:{hp:19,speed:85,coreDmg:45,reward:45,r:35,scale:2.65,arm:'#4B1528',shirt:'#2C2C2A',patch:'#E24B4A',skin:'#A32D2D',skinEdge:'#4B1528'},
   8:{hp:17,speed:85,coreDmg:40,reward:40,r:35,scale:2.45,arm:'#2C2C2A',shirt:'#712B13',patch:'#B4B2A9',skin:'#5F5E5A',skinEdge:'#2C2C2A'},
   7:{hp:15,speed:85,coreDmg:35,reward:35,r:32,scale:2.25,arm:'#712B13',shirt:'#26215C',patch:'#EF9F27',skin:'#D85A30',skinEdge:'#4A1B0C'},
@@ -1303,19 +1304,17 @@ function defeat(kind){
 function showDefeat(kind){
   if(kind==='core'){
     document.getElementById('overT').textContent='The village core fell';
-    document.getElementById('overP').textContent='The zombies destroyed the core. Your coins and walls are kept.';
+    document.getElementById('overP').textContent='The zombies destroyed the core. Everything will be reset.';
   } else {
     document.getElementById('overT').textContent=online()?'Every player was knocked out':'You were defeated';
-    document.getElementById('overP').textContent=(online()?'All players were down at the same time.':'A zombie got you.')+' Your coins and walls are kept.';
+    document.getElementById('overP').textContent=(online()?'All players were down at the same time.':'A zombie got you.')+' Everything will be reset.';
   }
   if(NET.mode==='client') document.getElementById('overP').textContent+=' Waiting for the host to try again.';
   overEl.hidden=false; if(NET.mode!=='client') retryBtn.focus();
 }
 retryBtn.addEventListener('click',()=>{
   if(NET.mode==='client') return;
-  zombies=[]; drops=[]; arrows=[]; core.hp=core.maxHp; core.hitT=0; gameTime=0; defeated=false; NET.defKind=0;
-  wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false;
-  resetPlayers();
+  resetGame(); showMsg('Everything was reset. Back to wave 1.');
   overEl.hidden=true; canvas.focus();
 });
 const swingBtn=document.getElementById('swing');
