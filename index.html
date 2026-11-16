@@ -147,6 +147,12 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 @media (prefers-reduced-motion: reduce){ #specBtn.ready{animation:none;} }
 #specBtn:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #specBtn[hidden]{display:none;}
+#bombBtn{position:absolute;left:16px;bottom:194px;font:600 15px "Pixelify Sans", ui-rounded, system-ui, sans-serif;
+  padding:9px 14px;background:#444441;color:#F1EFE8;border:2px solid #2C2C2A;border-radius:10px;cursor:pointer;}
+#bombBtn:hover{background:#5F5E5A;}
+#bombBtn:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
+#bombBtn[hidden]{display:none;}
+#bombs[hidden]{display:none;}
 #petBtn:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #swing:focus-visible{outline:3px solid #185FA5;outline-offset:2px;}
 #swing[hidden],#zone[hidden],#hpWrap[hidden]{display:none;}
@@ -249,7 +255,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <h1>Village Defense</h1>
     <p id="hint">Move with WASD or the arrow keys.</p>
     <p id="zone">Inside the village</p>
-    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="weapon">Weapon: Wooden sword</span><span id="armor" hidden>Armor: Wooden</span><span id="buffs" hidden></span></p>
+    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="bombs" hidden>Bombs: 0</span><span id="weapon">Weapon: Wooden sword</span><span id="armor" hidden>Armor: Wooden</span><span id="buffs" hidden></span></p>
     <p id="netinfo" hidden></p>
     <p id="threat" aria-live="polite"></p>
     <p id="msg" aria-live="polite"></p>
@@ -271,6 +277,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
       <button type="button" data-armor="wood">Wooden armor</button>
       <button type="button" data-tower="1">Archer tower</button>
       <button type="button" data-tup="1">Upgrade towers</button>
+      <button type="button" data-bomb="1">3 bombs</button>
     </div>
     <button type="button" class="cancel">Cancel</button>
   </div>
@@ -314,6 +321,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
   <button id="swing" type="button">Swing sword</button>
   <button id="petBtn" type="button" hidden></button>
   <button id="specBtn" type="button" hidden disabled>Spin attack 0%</button>
+  <button id="bombBtn" type="button" hidden>Throw bomb</button>
   <div id="modes" role="dialog" aria-label="Start menu"><div class="card">
     <h2>Village Defense</h2>
     <div id="mMain">
@@ -891,6 +899,8 @@ function syncSwordMenu(){
   const tb=smenu.querySelector('button[data-tower]'), nb=towersBuilt();
   tb.disabled=nb>=4; tb.textContent='Archer tower'+(nb>=4?' (all 4 built)':' - '+price(TOWER_COST)+' ('+nb+'/4 built)');
   const ub=smenu.querySelector('button[data-tup]'), U=TOWER_UP[towerLv+1];
+  const bb=smenu.querySelector('button[data-bomb]'), have=me?(me.bombs||0):0;
+  bb.disabled=have>=BOMB_MAX; bb.textContent='3 bombs - '+price(BOMB_COST)+' (you have '+have+(have>=BOMB_MAX?', max':'')+')';
   ub.disabled=!U||!nb; ub.textContent=!U?'Towers fully upgraded (Lv 4)':'Upgrade towers to Lv '+(towerLv+1)+': '+U.name+' - '+price(U.cost)+(nb?'':' (build a tower first)');
   for(const btn of smenu.querySelectorAll('button[data-w]')){
     const W0=WEAPONS[btn.dataset.w], owned=W0.rank<=WEAPONS[weapon].rank;
@@ -917,7 +927,7 @@ function buySword(id,p){
 function pickSword(id){ if(NET.mode==='client'){ netSend({t:'sword',id}); closeSwordMenu(); } else buySword(id,me); }
 smenu.addEventListener('click',e=>{
   const t=e.target.closest('button'); if(!t) return;
-  if(t.dataset.w) pickSword(t.dataset.w); else if(t.dataset.armor) pickArmor(); else if(t.dataset.tower) pickTower(); else if(t.dataset.tup) pickTowerUp(); else closeSwordMenu();
+  if(t.dataset.w) pickSword(t.dataset.w); else if(t.dataset.armor) pickArmor(); else if(t.dataset.tower) pickTower(); else if(t.dataset.tup) pickTowerUp(); else if(t.dataset.bomb) pickBombs(); else closeSwordMenu();
 });
 function nearShop(p){
   const n=interiors.shop.npc;
@@ -925,7 +935,7 @@ function nearShop(p){
 }
 function shopPlayer(){ return nearShop(me); }
 function computeAction3(){
-  if(!shopPlayer()||(weapon==='diamond'&&me&&me.armor&&towersBuilt()>=4&&towerLv>=4)) return null;
+  if(!shopPlayer()) return null;
   return {label:'Buy swords, armor and towers', run:openSwordMenu};
 }
 function computeAction2(){
@@ -1166,6 +1176,75 @@ function computeActionFor(player){
 }
 let lastBtn='', lastBtn2='', lastBtn3='', lastBtn4='', lastBtn5='', lastWeapon='', lastStats='', action3=null, action4=null, action5=null;
 const act4Btn=document.getElementById('act4'), act5Btn=document.getElementById('act5');
+const BOMB_COST=50, BOMB_MAX=9, BOMB_R=130, BOMB_FLY=0.55, BOMB_FUSE=0.6, BOMB_DIST=230;
+let bombsLive=[], bombSeq=0;
+function buyBombs(p){
+  const n=interiors.shop.npc;
+  if(!p) return;
+  if((p.bombs||0)>=BOMB_MAX){ say(n,'You can only carry '+BOMB_MAX+' bombs.'); if(p===me) closeSwordMenu(); return; }
+  const cost=price(BOMB_COST,p);
+  if(coins<cost){ say(n,'3 bombs are '+cost+' coins.'); if(p===me) closeSwordMenu(); return; }
+  coins-=cost; emit('buy',{i:p.i}); p.bombs=Math.min(BOMB_MAX,(p.bombs||0)+3);
+  say(n,'Careful, those are loud!');
+  showMsg((online()?dn(p)+' bought':'You bought')+' 3 bombs. Press X outside to throw one.');
+  if(p===me) closeSwordMenu();
+}
+function pickBombs(){ if(!me||(me.bombs||0)>=BOMB_MAX) return; if(NET.mode==='client'){ netSend({t:'buybomb'}); closeSwordMenu(); } else buyBombs(me); }
+function throwBomb(p){
+  if(!p||defeated||p.down||p.fadeDir||p.scene!=='world'||!(p.bombs>0)) return;
+  p.bombs--;
+  let tx=p.x+p.fx*BOMB_DIST, ty=p.y+p.fy*BOMB_DIST;
+  tx=Math.max(30,Math.min(W-30,tx)); ty=Math.max(30,Math.min(H-30,ty));
+  bombsLive.push({id:++bombSeq,sx:p.x,sy:p.y,tx,ty,x:p.x,y:p.y,h:0,t:0,fuse:BOMB_FUSE,by:p.i});
+}
+function useBomb(){
+  if(!me||!(me.bombs>0)||me.scene!=='world') return;
+  if(NET.mode==='client'){ if(!NET.started||me.down||clientDef) return; netSend({t:'bomb'}); me.bombs--; }
+  else throwBomb(me);
+}
+function updateBombs(dt){
+  for(const b of bombsLive){
+    if(b.t<BOMB_FLY){
+      b.t=Math.min(BOMB_FLY,b.t+dt); const k=b.t/BOMB_FLY;
+      b.x=b.sx+(b.tx-b.sx)*k; b.y=b.sy+(b.ty-b.sy)*k; b.h=Math.sin(k*Math.PI)*70;
+      continue;
+    }
+    b.fuse-=dt;
+    if(b.fuse<=0){
+      b.done=true; let n=0;
+      const bp=players.find(q=>q.i===b.by);
+      for(const z of zombies){
+        const dx=z.x-b.x, dy=z.y-b.y, d=Math.hypot(dx,dy);
+        if(d>BOMB_R+z.r) continue;
+        n++; z.lastBy=b.by;
+        z.hp-=4/WEAPONS[weapon].hits[z.level]; z.hitT=0.25; z.kb=0.3; z.kbx=dx/(d||1)*600; z.kby=dy/(d||1)*600;
+      }
+      emit('boom',{x:Math.round(b.x),y:Math.round(b.y),n,i:b.by});
+      if(bp && n) showMsg((online()?dn(bp)+"'s":'Your')+' bomb hit '+n+(n===1?' enemy!':' enemies!'));
+    }
+  }
+  bombsLive=bombsLive.filter(b=>!b.done);
+}
+function drawBomb(b){
+  const fl=b.t>=BOMB_FLY;
+  ctx.fillStyle='rgba(0,0,0,.25)'; ctx.beginPath(); ctx.ellipse(b.x,b.y+8,9,3.5,0,0,7); ctx.fill();
+  if(fl){ const k=Math.max(0,b.fuse)/BOMB_FUSE; ctx.strokeStyle='rgba(226,75,74,'+(0.5+0.5*Math.sin(performance.now()/50))+')'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(b.x,b.y,BOMB_R*(1-k*0.15),0,7); ctx.stroke(); }
+  const y=b.y-b.h;
+  ctx.fillStyle='#2C2C2A'; ctx.beginPath(); ctx.arc(b.x,y,9,0,7); ctx.fill();
+  ctx.fillStyle='rgba(255,255,255,.35)'; ctx.beginPath(); ctx.arc(b.x-3,y-3,2.5,0,7); ctx.fill();
+  ctx.strokeStyle='#854F0B'; ctx.lineWidth=2; ctx.beginPath(); ctx.moveTo(b.x+4,y-7); ctx.quadraticCurveTo(b.x+9,y-13,b.x+7,y-16); ctx.stroke();
+  ctx.fillStyle=Math.floor(performance.now()/80)%2?'#FAC775':'#E24B4A'; ctx.beginPath(); ctx.arc(b.x+7,y-16,2.6,0,7); ctx.fill();
+}
+const bombBtn=document.getElementById('bombBtn'), bombsEl=document.getElementById('bombs');
+bombBtn.addEventListener('click',()=>{ useBomb(); canvas.focus(); });
+let lastBombUI='';
+function syncBombs(){
+  const n=me?(me.bombs||0):0, show=!!me && n>0 && me.scene==='world' && !me.down && modesEl.hidden;
+  const key=n+'|'+show;
+  if(key===lastBombUI) return; lastBombUI=key;
+  bombBtn.hidden=!show; bombBtn.textContent='Throw bomb'+(touch?'':' (X)')+' \u00D7'+n;
+  bombsEl.hidden=!n; bombsEl.textContent='Bombs: '+n;
+}
 const SPEC_PER_KILL=20, SPIN_T=0.45, SPIN_R=150;
 function doSpecial(p){
   if(!p||defeated||p.down||p.fadeDir||p.scene!=='world'||(p.spec||0)<100) return;
@@ -1217,6 +1296,10 @@ function syncUI(){
   if(isNight(wave) && !allDone) th='Night (double coins) \u00B7 '+th;
   if(weather===1 && !allDone) th='Rain (enemies slower) \u00B7 '+th;
   else if(weather===2 && !allDone) th='Snow (everyone slower) \u00B7 '+th;
+  else if(weather===3 && !allDone) th='Fog (+2 coins each) \u00B7 '+th;
+  if(meteorOn && waveLive && !allDone) th='Meteor shower! \u00B7 '+th;
+  if(tornado) th='Tornado! \u00B7 '+th;
+  if(quakeShakeT>0) th='EARTHQUAKE! \u00B7 '+th;
   if(th!==lastThreat){ threatEl.textContent=th; lastThreat=th; }
   if(core.hp!==lastCore){ coreEl.textContent='Core: '+core.hp+'/'+core.maxHp; lastCore=core.hp; }
   const st=coins+'|'+wallInv;
@@ -1262,11 +1345,11 @@ function waveDef(i){ return endless ? {count:i+1,level:1,boss:(i+1)%10===0?'king
 function isNight(n){ return n>0 && ((n-1)%6)>=4; }
 let nightK=0;
 /* weather: 0 clear, 1 rain, 2 snow */
-let weather=0, rainK=0, snowK=0, wxDrops=[], wxFlakes=[], rainNode=null, rainGain=null;
-const WX_NAME=['clear','rain','snow'];
+let weather=0, rainK=0, snowK=0, fogK=0, wxDrops=[], wxFlakes=[], rainNode=null, rainGain=null;
+const WX_NAME=['clear','rain','snow','fog'];
 function wxEnemyMul(){ return weather===1?0.8:weather===2?0.85:1; }
 function wxPlayerMul(){ return weather===2?0.85:1; }
-function pickWeather(n){ if(n<=1) return 0; const r=Math.random(); return r<0.25?1:r<0.40?2:0; }
+function pickWeather(n){ if(n<=1) return 0; const r=Math.random(); return r<0.22?1:r<0.35?2:r<0.48?3:0; }
 const ZLEVEL={
   1:{hp:3,speed:85,coreDmg:5,reward:5,r:14,scale:1,arm:'#639922',shirt:'#5F5E5A',patch:'#888780',skin:'#97C459',skinEdge:'#3B6D11'},
   2:{hp:5,speed:85,coreDmg:10,reward:10,r:17,scale:1.25,arm:'#3B6D11',shirt:'#2C2C2A',patch:'#712B13',skin:'#639922',skinEdge:'#173404'},
@@ -1382,9 +1465,12 @@ function updateWaves(dt){
     for(let i=0;i<W0.count;i++) spawnQueue.push(W0.level);
     if(W0.boss) spawnQueue.push(W0.boss);
     const oldWx=weather; weather=pickWeather(wave+1);
-    const wxMsg = weather===oldWx ? '' : weather===1 ? ' It started raining: enemies are slower.' : weather===2 ? ' It is snowing: everyone is a little slower.' : ' The weather cleared up.';
+    meteorOn = wave+1>=3 && Math.random()<0.1; metT=2;
+    const torNow = wave+1>=4 && Math.random()<0.08; if(torNow) torWant=true;
+    const quakeNow = wave+1>=5 && Math.random()<0.08; if(quakeNow) quakeWant=4+Math.random()*6;
+    const wxMsg = weather===oldWx ? '' : weather===1 ? ' It started raining: enemies are slower.' : weather===2 ? ' It is snowing: everyone is a little slower.' : weather===3 ? ' Thick fog rolled in: enemies drop +2 coins.' : ' The weather cleared up.';
     const nightMsg = isNight(wave+1) ? (isNight(wave)?' It is still night: double coins!':' Night falls! Enemies drop double coins.') : (isNight(wave)?' The sun is up.':'');
-    showMsg((endless?'Endless wave ':'Wave ')+(wave+1)+': '+W0.count+' '+nounOf(W0.level,W0.count)+' incoming!'+(W0.boss?' The Zombie King is coming!':'')+nightMsg+wxMsg);
+    showMsg((endless?'Endless wave ':'Wave ')+(wave+1)+': '+W0.count+' '+nounOf(W0.level,W0.count)+' incoming!'+(W0.boss?' The Zombie King is coming!':'')+nightMsg+wxMsg+(meteorOn?' A METEOR SHOWER is starting! Watch for red circles.':'')+(torNow?' A TORNADO is coming! Stay away from it.':'')+(quakeNow?' The ground feels shaky...':''));
     wave++; waveTimer=WAVE_DELAY; waveLive=true; emit('wave',{n:wave});
   }
 }
@@ -1632,6 +1718,9 @@ const SFX={
   combo:n=>tone(440+Math.min(n,12)*55,0.09,'triangle',0.09),
   ach:()=>[523,659,784,1047].forEach((f,i)=>tone(f,0.18,'triangle',0.1,0,i*0.11)),
   down:()=>[330,262,196].forEach((f,i)=>tone(f,0.2,'sawtooth',0.08,0,i*0.15)),
+  thunder:()=>{ noise(0.15,0.4,3000); noise(1.2,0.25,120,0.05); tone(55,0.9,'sawtooth',0.08,-20,0.05); },
+  quake:()=>{ noise(2.8,0.3,70); tone(40,2.6,'sawtooth',0.08,-10); noise(0.4,0.2,300,0.6); noise(0.4,0.2,300,1.5); },
+  boom:()=>{ noise(0.6,0.35,220); tone(70,0.5,'sawtooth',0.15,-40); noise(0.25,0.2,1400,0.02); },
   spin:()=>{ noise(0.35,0.2,1800); tone(330,0.3,'sawtooth',0.08,500); tone(660,0.25,'triangle',0.08,300,0.1); },
   power:()=>{ tone(523,0.08,'triangle',0.1,400); tone(784,0.15,'triangle',0.1,400,0.08); }
 };
@@ -1643,7 +1732,7 @@ syncSoundBtn();
 window.addEventListener('pointerdown',()=>audio(),{once:true});
 window.addEventListener('keydown',()=>audio(),{once:true});
 
-let fxTexts=[], fxParts=[], shakeT=0, shakeMag=0, comboShow=null, prevSwing=0;
+let fxBooms=[], fxTexts=[], fxParts=[], shakeT=0, shakeMag=0, comboShow=null, prevSwing=0;
 function floatText(x,y,text,color,size){ fxTexts.push({x,y,text,color,size:size||15,t:0,life:1.1}); if(fxTexts.length>60) fxTexts.shift(); }
 function burst(x,y,colors,n,speed){
   for(let i=0;i<n;i++){ const a=Math.random()*Math.PI*2, v=(0.4+Math.random()*0.6)*(speed||160); fxParts.push({x,y,vx:Math.cos(a)*v,vy:Math.sin(a)*v-40,t:0,life:0.35+Math.random()*0.35,c:colors[i%colors.length],r:2+Math.random()*2.5}); }
@@ -1651,6 +1740,12 @@ function burst(x,y,colors,n,speed){
 }
 function shake(mag,t){ shakeMag=Math.max(shakeMag,mag); shakeT=Math.max(shakeT,t); }
 function updateFx(dt){
+  if(flashT>0) flashT-=dt;
+  for(const c of cracks) c.t+=dt; cracks=cracks.filter(c=>c.t<20);
+  if(quakeShakeT>0){ quakeShakeT-=dt; shake(9,0.15); }
+  for(const c of craters) c.t+=dt; craters=craters.filter(c=>c.t<8);
+  for(const b of fxBolts) b.t+=dt; fxBolts=fxBolts.filter(b=>b.t<0.35);
+  for(const q of fxBooms) q.t+=dt; fxBooms=fxBooms.filter(q=>q.t<0.45);
   for(const q of fxTexts){ q.t+=dt; q.y-=34*dt; }
   fxTexts=fxTexts.filter(q=>q.t<q.life);
   for(const q of fxParts){ q.t+=dt; q.x+=q.vx*dt; q.y+=q.vy*dt; q.vy+=380*dt; q.vx*=0.96; }
@@ -1698,6 +1793,7 @@ function updateWeather(dt){
   const tr=weather===1&&!allDone?1:0, ts=weather===2&&!allDone?1:0;
   rainK+=Math.sign(tr-rainK)*Math.min(Math.abs(tr-rainK),dt*0.5);
   snowK+=Math.sign(ts-snowK)*Math.min(Math.abs(ts-snowK),dt*0.5);
+  { const tf=weather===3&&!allDone?1:0; fogK+=Math.sign(tf-fogK)*Math.min(Math.abs(tf-fogK),dt*0.4); }
   const nr=Math.round(160*rainK), ns=Math.round(110*snowK);
   while(wxDrops.length<nr) wxDrops.push({x:Math.random()*vw,y:Math.random()*vh,l:10+Math.random()*12,v:700+Math.random()*300});
   if(wxDrops.length>nr) wxDrops.length=nr;
@@ -1719,7 +1815,215 @@ function updateWeather(dt){
   }
   if(rainGain){ rainGain.gain.value=want; if(want<=0.002 && rainK<0.01){ try{ rainNode.stop(); }catch(e){} rainNode=null; rainGain=null; } }
 }
+/* lightning storms: only while it rains during a wave */
+const BOLT_WARN=0.8, BOLT_R_ENEMY=70, BOLT_R_PLAYER=45;
+let boltT=4, boltWarn=[], fxBolts=[], flashT=0;
+function updateLightning(dt){
+  for(const w of boltWarn){
+    w.t-=dt;
+    if(w.zid){ const z=zombies.find(q=>q.id===w.zid); if(z){ w.x=z.x; w.y=z.y; } }
+  }
+  for(const w of boltWarn) if(w.t<=0){
+    w.done=true; let n=0; const hitP=[];
+    for(const z of zombies){
+      const d=Math.hypot(z.x-w.x,z.y-w.y);
+      if(d>BOLT_R_ENEMY+z.r) continue;
+      n++; z.lastBy=-1; z.hp-=3/(WEAPONS.wood.hits[z.level]||3); z.hitT=0.25;
+    }
+    for(const p of players){
+      if(p.scene!=='world'||p.down) continue;
+      if(Math.hypot(p.x-w.x,p.y-w.y)<BOLT_R_PLAYER+p.r){ const before=p.hp; hurtPlayer(p,p.x-w.x||1,p.y-w.y,40,1,null); if(p.hp<before) hitP.push(p.i); }
+    }
+    emit('bolt',{x:Math.round(w.x),y:Math.round(w.y),n,hp:hitP});
+  }
+  boltWarn=boltWarn.filter(w=>!w.done);
+  if(weather!==1||!waveLive||allDone){ boltT=Math.max(boltT,2); return; }
+  boltT-=dt;
+  if(boltT>0) return;
+  boltT=3+Math.random()*5;
+  const outside=players.filter(p=>p.scene==='world'&&!p.down);
+  if(zombies.length && (Math.random()<0.75 || !outside.length)){
+    const z=zombies[Math.floor(Math.random()*zombies.length)];
+    boltWarn.push({x:z.x,y:z.y,t:BOLT_WARN,zid:z.id});
+  } else if(outside.length){
+    const p=outside[Math.floor(Math.random()*outside.length)], a=Math.random()*Math.PI*2, r=Math.random()*40;
+    boltWarn.push({x:p.x+Math.cos(a)*r,y:p.y+Math.sin(a)*r,t:BOLT_WARN,zid:0});
+  }
+}
+function drawBoltWarn(w){
+  const k=Math.max(0,w.t)/BOLT_WARN, pulse=0.5+0.5*Math.sin(performance.now()/60);
+  ctx.strokeStyle='rgba(250,199,117,'+(0.5+0.5*pulse)+')'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(w.x,w.y,(w.zid?BOLT_R_ENEMY:BOLT_R_PLAYER)*(0.6+0.4*k),0,7); ctx.stroke();
+  ctx.fillStyle='rgba(250,199,117,'+(0.18+0.15*pulse)+')'; ctx.fill();
+  label('!',w.x,w.y-4,'#854F0B',20);
+}
+function drawBolts(){
+  for(const b of fxBolts){
+    const k=b.t/0.35; ctx.globalAlpha=Math.max(0,1-k);
+    ctx.fillStyle='rgba(68,68,65,.55)'; ctx.beginPath(); ctx.ellipse(b.x,b.y+4,26,10,0,0,7); ctx.fill();
+    for(const [c,wid] of [['#FAC775',8],['#FFFFFF',3]]){
+      ctx.strokeStyle=c; ctx.lineWidth=wid; ctx.beginPath(); ctx.moveTo(b.pts[0][0],b.pts[0][1]);
+      for(const q of b.pts) ctx.lineTo(q[0],q[1]); ctx.stroke();
+    }
+  }
+  ctx.globalAlpha=1;
+}
+const fogCv=document.createElement('canvas'), fogCtx=fogCv.getContext('2d');
+function drawFog(){
+  const w=Math.ceil(vw*dpr), h=Math.ceil(vh*dpr);
+  if(fogCv.width!==w||fogCv.height!==h){ fogCv.width=w; fogCv.height=h; }
+  const d=fogCtx; d.setTransform(dpr,0,0,dpr,0,0); d.globalCompositeOperation='source-over';
+  d.clearRect(0,0,vw,vh);
+  d.fillStyle='rgba(214,218,222,'+(0.9*fogK)+')'; d.fillRect(0,0,vw,vh);
+  const t=performance.now()/1000;
+  d.fillStyle='rgba(240,242,244,'+(0.35*fogK)+')';
+  for(let k=0;k<7;k++){ const fx=((k*263+t*18)%(vw+400))-200, fy=(k*151)%vh; d.beginPath(); d.ellipse(fx,fy,220,70,0,0,7); d.fill(); }
+  d.globalCompositeOperation='destination-out';
+  const lights=[[core.x,core.y,140]];
+  for(const p of players) if(p.scene==='world' && !p.down) lights.push([p.x,p.y,250]);
+  for(const [lx,ly,r] of lights){
+    const x=lx-camX, y=ly-camY; if(x<-r||y<-r||x>vw+r||y>vh+r) continue;
+    const g=d.createRadialGradient(x,y,0,x,y,r); g.addColorStop(0,'rgba(0,0,0,1)'); g.addColorStop(0.5,'rgba(0,0,0,.85)'); g.addColorStop(1,'rgba(0,0,0,0)');
+    d.fillStyle=g; d.beginPath(); d.arc(x,y,r,0,7); d.fill();
+  }
+  d.globalCompositeOperation='source-over';
+  ctx.drawImage(fogCv,0,0,vw,vh);
+}
+/* tornado: a rare event that wanders across the map */
+const TOR_PULL=170, TOR_HURT=75, TOR_LIFE=32, TOR_SPEED=85;
+let tornado=null, torWant=false;
+function startTornado(){
+  const a=Math.random()*Math.PI*2;
+  tornado={x:RX+Math.cos(a)*1000,y:RY+Math.sin(a)*800,tx:RX,ty:RY,life:TOR_LIFE,t:0};
+}
+function updateTornado(dt){
+  if(torWant && waveLive && !tornado){ torWant=false; startTornado(); }
+  if(!tornado) return;
+  const T=tornado; T.t+=dt; T.life-=dt;
+  if(T.life<=0||!waveLive||allDone){ tornado=null; emit('tornadoEnd'); return; }
+  const dx=T.tx-T.x, dy=T.ty-T.y, d=Math.hypot(dx,dy);
+  if(d<40){ T.tx=VIL.x+120+Math.random()*(VIL.w-240); T.ty=VIL.y+120+Math.random()*(VIL.h-240); }
+  else { T.x+=dx/d*TOR_SPEED*dt+Math.sin(T.t*1.7)*30*dt; T.y+=dy/d*TOR_SPEED*dt+Math.cos(T.t*1.3)*30*dt; }
+  for(const z of zombies){
+    const ex=z.x-T.x, ey=z.y-T.y, ed=Math.hypot(ex,ey)||1;
+    if(ed>TOR_PULL+z.r) continue;
+    const pull=Math.min(ed,160*dt), sw=220*dt;
+    const nx=z.x-ex/ed*pull-ey/ed*sw, ny=z.y-ey/ed*pull+ex/ed*sw;
+    if(!blockedWorld(nx,ny,z.r,true,z.ghost)){ z.x=nx; z.y=ny; }
+    if(ed<TOR_HURT+z.r){ z.hp-=dt/(WEAPONS.wood.hits[z.level]||3); z.lastBy=-2; z.hitT=Math.max(z.hitT||0,0.05); }
+  }
+  for(const p of players){
+    if(p.scene!=='world'||p.down) continue;
+    const ex=p.x-T.x, ey=p.y-T.y, ed=Math.hypot(ex,ey)||1;
+    if(ed<TOR_HURT+p.r) hurtPlayer(p,ex,ey,160,1,null);
+  }
+}
+function drawTornado(T){
+  const t=performance.now()/1000, fade=Math.min(1,T.life/2,(T.t||0)/1.5);
+  ctx.save(); ctx.globalAlpha=0.9*Math.max(0.15,fade);
+  ctx.fillStyle='rgba(0,0,0,.2)'; ctx.beginPath(); ctx.ellipse(T.x,T.y+8,70,22,0,0,7); ctx.fill();
+  for(let k=0;k<9;k++){
+    const h=k*24, w=26+k*13, wob=Math.sin(t*4+k*0.7)*(6+k*1.5);
+    ctx.fillStyle=k%2?'rgba(136,135,128,.55)':'rgba(180,178,169,.55)';
+    ctx.beginPath(); ctx.ellipse(T.x+wob,T.y-h,w,w*0.32,0,0,7); ctx.fill();
+    ctx.strokeStyle='rgba(95,94,90,.6)'; ctx.lineWidth=2; ctx.beginPath(); ctx.ellipse(T.x+wob,T.y-h,w*0.8,w*0.24,0,t*6+k,t*6+k+2.4); ctx.stroke();
+  }
+  for(let k=0;k<10;k++){
+    const a=t*5+k*0.63, r=30+(k%4)*22, hh=20+k*16;
+    ctx.fillStyle=k%3?'#854F0B':'#5F5E5A'; ctx.fillRect(T.x+Math.cos(a)*r-3,T.y-hh+Math.sin(a)*r*0.3-2,6,4);
+  }
+  ctx.restore();
+  label('Tornado',T.x,T.y-236,'#444441',15);
+}
+
+/* earthquake: a rare event, the ground cracks open under enemies */
+const QUAKE_LEN=3, QUAKE_CRACK_AT=1.6;
+let quake=null, quakeWant=0, cracks=[], quakeShakeT=0;
+function makeCrack(cx,cy){
+  const a=Math.random()*Math.PI, len=220+Math.random()*140, pts=[];
+  const n=8; for(let i=0;i<=n;i++){ const k=i/n-0.5; pts.push([Math.round(cx+Math.cos(a)*len*k+(Math.random()*26-13)),Math.round(cy+Math.sin(a)*len*k+(Math.random()*26-13))]); }
+  return pts;
+}
+function distSeg(px,py,ax,ay,bx,by){ const vx=bx-ax, vy=by-ay, L=vx*vx+vy*vy||1; let t=((px-ax)*vx+(py-ay)*vy)/L; t=Math.max(0,Math.min(1,t)); return Math.hypot(px-(ax+vx*t),py-(ay+vy*t)); }
+function updateQuake(dt){
+  if(quakeWant>0 && waveLive){ quakeWant-=dt; if(quakeWant<=0){ quake={t:0,cracked:false}; emit('quake',{d:QUAKE_LEN}); } }
+  if(!quake) return;
+  quake.t+=dt;
+  if(!quake.cracked && quake.t>=QUAKE_CRACK_AT){
+    quake.cracked=true;
+    const list=[], cn=6+Math.floor(Math.random()*3);
+    for(let i=0;i<cn;i++){
+      if(zombies.length && Math.random()<0.7){ const z=zombies[Math.floor(Math.random()*zombies.length)]; list.push(makeCrack(z.x,z.y)); }
+      else list.push(makeCrack(VIL.x+100+Math.random()*(VIL.w-200),VIL.y+100+Math.random()*(VIL.h-200)));
+    }
+    let n=0;
+    for(const z of zombies){
+      let hit=false;
+      for(const c of list){ for(let i=1;i<c.length&&!hit;i++) if(distSeg(z.x,z.y,c[i-1][0],c[i-1][1],c[i][0],c[i][1])<z.r+14) hit=true; if(hit) break; }
+      if(hit){ n++; z.lastBy=-3; z.hp-=4/(WEAPONS.wood.hits[z.level]||3); z.hitT=0.3; }
+    }
+    let wc=0;
+    for(const q of slots) if(q.built && Math.random()<0.3){ q.hp-=1; wc++; if(q.hp<=0) breakWall(q); }
+    emit('crack',{c:list,n,w:wc});
+  }
+  if(quake.t>=QUAKE_LEN){ quake=null; emit('quakeEnd'); }
+}
+function drawCracks(){
+  for(const c of cracks){
+    const a=Math.max(0,Math.min(1,(20-c.t)/3));
+    if(!a) continue;
+    ctx.strokeStyle='rgba(44,44,42,'+(0.85*a)+')'; ctx.lineWidth=7; ctx.lineJoin='round'; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(c.p[0][0],c.p[0][1]); for(const q of c.p) ctx.lineTo(q[0],q[1]); ctx.stroke();
+    ctx.strokeStyle='rgba(99,56,6,'+(0.7*a)+')'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.moveTo(c.p[0][0],c.p[0][1]-2); for(const q of c.p) ctx.lineTo(q[0],q[1]-2); ctx.stroke();
+    ctx.lineCap='butt'; ctx.lineJoin='miter';
+  }
+}
+/* meteor shower: a rare event for a whole wave */
+const MET_WARN=1.3, MET_R=110;
+let meteorOn=false, metT=2, metWarn=[], metSeq=0, craters=[];
+function updateMeteors(dt){
+  for(const m of metWarn) m.t-=dt;
+  for(const m of metWarn) if(m.t<=0){
+    m.done=true; let n=0; const hitP=[];
+    for(const z of zombies){
+      const dx=z.x-m.x, dy=z.y-m.y, d=Math.hypot(dx,dy);
+      if(d>MET_R+z.r) continue;
+      n++; z.lastBy=-1; z.hp-=5/(WEAPONS.wood.hits[z.level]||3); z.hitT=0.25; z.kb=0.3; z.kbx=dx/(d||1)*560; z.kby=dy/(d||1)*560;
+    }
+    for(const p of players){
+      if(p.scene!=='world'||p.down) continue;
+      if(Math.hypot(p.x-m.x,p.y-m.y)<MET_R*0.8+p.r){ const before=p.hp; hurtPlayer(p,p.x-m.x||1,p.y-m.y,80,2,null); if(p.hp<before) hitP.push(p.i); }
+    }
+    emit('meteor',{x:Math.round(m.x),y:Math.round(m.y),n,hp:hitP});
+  }
+  metWarn=metWarn.filter(m=>!m.done);
+  if(!meteorOn||!waveLive||allDone) return;
+  metT-=dt; if(metT>0) return;
+  metT=1+Math.random()*1.6;
+  const outside=players.filter(p=>p.scene==='world'&&!p.down), r=Math.random();
+  let x, y;
+  if(zombies.length && r<0.6){ const z=zombies[Math.floor(Math.random()*zombies.length)]; x=z.x+(Math.random()*80-40); y=z.y+(Math.random()*80-40); }
+  else if(outside.length && r<0.85){ const p=outside[Math.floor(Math.random()*outside.length)]; x=p.x+(Math.random()*140-70); y=p.y+(Math.random()*140-70); }
+  else { x=VIL.x+60+Math.random()*(VIL.w-120); y=VIL.y+60+Math.random()*(VIL.h-120); }
+  metWarn.push({id:++metSeq,x,y,t:MET_WARN});
+}
+function drawMeteorWarn(m){
+  const k=Math.max(0,m.t)/MET_WARN, pulse=0.5+0.5*Math.sin(performance.now()/70);
+  ctx.strokeStyle='rgba(226,75,74,'+(0.55+0.45*pulse)+')'; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(m.x,m.y,MET_R*(0.5+0.5*(1-k)),0,7); ctx.stroke();
+  ctx.fillStyle='rgba(226,75,74,'+(0.10+0.12*pulse)+')'; ctx.beginPath(); ctx.arc(m.x,m.y,MET_R,0,7); ctx.fill();
+  // falling meteor
+  const fx=m.x+k*420, fy=m.y-k*620;
+  ctx.strokeStyle='rgba(239,159,39,.55)'; ctx.lineWidth=14; ctx.lineCap='round'; ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(fx+70,fy-100); ctx.stroke();
+  ctx.strokeStyle='rgba(250,199,117,.8)'; ctx.lineWidth=6; ctx.beginPath(); ctx.moveTo(fx,fy); ctx.lineTo(fx+40,fy-58); ctx.stroke(); ctx.lineCap='butt';
+  ctx.fillStyle='#5F5E5A'; ctx.beginPath(); ctx.arc(fx,fy,13,0,7); ctx.fill();
+  ctx.fillStyle='#E24B4A'; ctx.beginPath(); ctx.arc(fx-3,fy+3,6,0,7); ctx.fill();
+}
+function drawCraters(){
+  for(const c of craters){ const a=Math.max(0,1-c.t/8); if(!a) continue; ctx.fillStyle='rgba(68,68,65,'+(0.45*a)+')'; ctx.beginPath(); ctx.ellipse(c.x,c.y,44,20,0,0,7); ctx.fill(); ctx.fillStyle='rgba(239,159,39,'+(0.35*a*Math.max(0,1-c.t/2))+')'; ctx.beginPath(); ctx.ellipse(c.x,c.y,26,11,0,0,7); ctx.fill(); }
+}
 function drawWeather(){
+  if(flashT>0){ ctx.fillStyle='rgba(255,255,255,'+Math.min(0.75,flashT*3)+')'; ctx.fillRect(0,0,vw,vh); }
   if(rainK>0.01){
     ctx.fillStyle='rgba(40,60,100,'+(0.14*rainK)+')'; ctx.fillRect(0,0,vw,vh);
     ctx.strokeStyle='rgba(200,220,255,'+(0.55*rainK)+')'; ctx.lineWidth=1.3; ctx.beginPath();
@@ -1733,6 +2037,12 @@ function drawWeather(){
   }
 }
 function drawFxWorld(){
+  drawBolts();
+  for(const q of fxBooms){ const k=q.t/0.45, r=20+(BOMB_R+10)*Math.min(1,k*1.6);
+    ctx.globalAlpha=Math.max(0,1-k); ctx.fillStyle='#FAC775'; ctx.beginPath(); ctx.arc(q.x,q.y,r*0.7,0,7); ctx.fill();
+    ctx.fillStyle='#EF9F27'; ctx.beginPath(); ctx.arc(q.x,q.y,r*0.45,0,7); ctx.fill();
+    ctx.strokeStyle='#E24B4A'; ctx.lineWidth=6*(1-k)+1; ctx.beginPath(); ctx.arc(q.x,q.y,r,0,7); ctx.stroke(); }
+  ctx.globalAlpha=1;
   for(const q of fxParts){ ctx.globalAlpha=Math.max(0,1-q.t/q.life); ctx.fillStyle=q.c; ctx.beginPath(); ctx.arc(q.x,q.y,q.r,0,7); ctx.fill(); }
   for(const q of fxTexts){ ctx.globalAlpha=Math.max(0,Math.min(1,(q.life-q.t)/0.35)); label(q.text,q.x,q.y,q.color,q.size); }
   ctx.globalAlpha=1;
@@ -1772,6 +2082,35 @@ function handleFx(e){
     case 'buy': if(isMe(e.i)) sfx('buy'); break;
     case 'wall': if(here) burst(e.x,e.y,['#BA7517','#854F0B','#D3D1C7'],18,220); sfx('wall'); shake(4,0.2); break;
     case 'power': if(isMe(e.i)) sfx('power'); break;
+    case 'quake': quakeShakeT=e.d||QUAKE_LEN; sfx('quake'); showMsg('EARTHQUAKE! The ground is cracking!'); break;
+    case 'quakeEnd': if(me && !me.down) unlock('quake'); break;
+    case 'crack':
+      if(Array.isArray(e.c)) for(const p of e.c) cracks.push({p,t:0});
+      sfx('boom');
+      if(here && e.n){ const c0=e.c[0], mid=c0[Math.floor(c0.length/2)]; floatText(mid[0],mid[1]-30,'CRACK! x'+e.n,'#444441',20); }
+      if(e.w) showMsg('The earthquake cracked '+e.w+(e.w===1?' wall!':' walls!'));
+      break;
+    case 'tornadoEnd': showMsg('The tornado faded away.'); break;
+    case 'meteor':
+      craters.push({x:e.x,y:e.y,t:0});
+      if(here){ fxBooms.push({x:e.x,y:e.y,t:0}); burst(e.x,e.y,['#EF9F27','#E24B4A','#5F5E5A','#FAC775'],40,460); if(e.n) floatText(e.x,e.y-44,'SMASH! x'+e.n,'#A32D2D',20); shake(11,0.4); }
+      sfx('boom');
+      if(Array.isArray(e.hp) && me && e.hp.includes(me.i)){ unlock('meteor'); showMsg('A meteor hit you!'); }
+      if(e.n>=4 && !(Array.isArray(e.hp)&&e.hp.length)) unlock('meteor4');
+      break;
+    case 'bolt':
+      { const pts=[[e.x+(Math.random()*80-40),e.y-700]]; let x=pts[0][0], y=pts[0][1];
+        while(y<e.y-20){ y+=40+Math.random()*40; x+=(Math.random()*60-30)+(e.x-x)*0.25; pts.push([x,Math.min(y,e.y)]); }
+        pts.push([e.x,e.y]); fxBolts.push({x:e.x,y:e.y,pts,t:0}); }
+      if(here){ flashT=0.25; burst(e.x,e.y,['#FAC775','#FFFFFF','#888780'],18,260); if(e.n) floatText(e.x,e.y-40,'ZAP! x'+e.n,'#854F0B',18); shake(7,0.3); }
+      sfx('thunder');
+      if(Array.isArray(e.hp) && me && e.hp.includes(me.i)){ unlock('zap'); showMsg('You got struck by lightning!'); }
+      break;
+    case 'boom':
+      if(here){ fxBooms.push({x:e.x,y:e.y,t:0}); burst(e.x,e.y,['#EF9F27','#E24B4A','#FAC775','#444441'],36,420); burst(e.x,e.y,['#888780','#B4B2A9'],14,160); if(e.n) floatText(e.x,e.y-40,'BOOM! x'+e.n,'#A32D2D',20); else floatText(e.x,e.y-40,'BOOM!','#A32D2D',20); }
+      sfx('boom'); if(here) shake(9,0.35);
+      if(isMe(e.i) && e.n>=5) unlock('boom');
+      break;
     case 'spin':
       if(here){ for(let k=0;k<28;k++){ const a=k/28*Math.PI*2; fxParts.push({x:e.x+Math.cos(a)*20,y:e.y+Math.sin(a)*20,vx:Math.cos(a)*420,vy:Math.sin(a)*420,t:0,life:0.35,c:k%2?'#FAC775':'#FFFFFF',r:3}); } if(e.n) floatText(e.x,e.y-46,'Spin! x'+e.n,'#854F0B',18); }
       if(isMe(e.i)){ sfx('spin'); shake(6,0.25); if(e.n>=5) unlock('spin'); }
@@ -1809,7 +2148,15 @@ const ACH=[
   ['towers','Fortress','Have all 4 archer towers built'],
   ['fire','Fire Power','Upgrade the towers to fire arrows'],
   ['spin','Whirlwind','Hit 5 enemies with one spin attack'],
-  ['petmax','Best Friend','Upgrade your pet to level 4']
+  ['petmax','Best Friend','Upgrade your pet to level 4'],
+  ['boom','Kaboom','Hit 5 enemies with one bomb'],
+  ['zap','Shocking!','Get struck by lightning'],
+  ['meteor','Bonk!','Get hit by a meteor'],
+  ['meteor4','Sky Strike','A meteor smashes 4 enemies at once'],
+  ['foggy','Lost in the Fog','Clear a foggy wave'],
+  ['twister','Twister','The tornado defeats an enemy'],
+  ['crack','Fault Line','An earthquake crack defeats an enemy'],
+  ['quake','Shake It Off','Survive an earthquake']
 ];
 let achGot=store.get('vd_ach',{}); if(!achGot||typeof achGot!=='object') achGot={};
 let stats=store.get('vd_stats',{kills:0,imps:0,wolves:0}); if(!stats||typeof stats!=='object') stats={kills:0,imps:0,wolves:0};
@@ -1852,6 +2199,8 @@ function noteKill(e){
   if(e.kd==='wolf') unlock('wolf');
   if(e.cb>=5) unlock('combo5');
   if(e.cb>=10) unlock('combo10');
+  if(e.by===-2) unlock('twister');
+  if(e.by===-3) unlock('crack');
   if(e.lv==='king'){ unlock('king'); toast('The Zombie King is defeated!','+'+e.r+' coins'); shake(10,0.4); }
   if(e.cb>best.combo){ best.combo=e.cb; store.set('vd_best',best); renderBest(); }
   if(runBest.combo>=2 && e.cb>runBest.combo && !bestComboToasted){ bestComboToasted=true; toast('New best combo!','You beat your old best of x'+runBest.combo+'.'); }
@@ -1863,7 +2212,7 @@ function noteWave(n,cleared){
     if(n>(best[key]||0)){ best[key]=n; store.set('vd_best',best); renderBest(); }
     if((runBest[key]||0)>0 && n>runBest[key] && !bestWaveToasted){ bestWaveToasted=true; toast(endless?'New best endless wave!':'New best wave!','Your old best was wave '+runBest[key]+'.'); }
     if(!endless){ if(n>=10) unlock('w10'); if(n>=30) unlock('w30'); if(n>=50) unlock('w50'); }
-  } else if(n>=5 && !achLost && me && !me.down) unlock('untouch');
+  } else { if(n>=5 && !achLost && me && !me.down) unlock('untouch'); if(weather===3) unlock('foggy'); }
 }
 function achWatch(dt){
   achT-=dt; if(achT>0) return; achT=0.5;
@@ -1901,12 +2250,12 @@ function checkSwordHit(){
   if(!dead.length) return;
   zombies=zombies.filter(z=>z.hp>1e-6);
   for(const z of dead){
-    const val=z.L.reward*(isNight(wave)?2:1);
+    const val=z.L.reward*(isNight(wave)?2:1)+(weather===3?2:0);
     { const kp=players.find(q=>q.i===z.lastBy); if(kp) kp.spec=Math.min(100,(kp.spec||0)+SPEC_PER_KILL); }
     drops.push({x:z.x,y:z.y,value:val,t:Math.random()*6});
     comboN = gameTime-comboT<3 ? comboN+1 : 1; comboT=gameTime;
     const bonus = comboN>=3 ? Math.min(10,comboN-2) : 0; coins+=bonus;
-    emit('kill',{x:Math.round(z.x),y:Math.round(z.y),r:val,kd:z.L.kind||'zombie',lv:z.level,cb:comboN,bn:bonus});
+    emit('kill',{x:Math.round(z.x),y:Math.round(z.y),r:val,kd:z.L.kind||'zombie',lv:z.level,by:z.lastBy,cb:comboN,bn:bonus});
   }
   const tot=dead.reduce((a,z)=>a+z.L.reward,0)*(isNight(wave)?2:1);
   const nm=dead[0].L.noun||'zombie';
@@ -1997,12 +2346,14 @@ window.addEventListener('keydown',e=>{
     if(e.code==='Digit6'){ e.preventDefault(); pickArmor(); return; }
     if(e.code==='Digit7'){ e.preventDefault(); pickTower(); return; }
     if(e.code==='Digit8'){ e.preventDefault(); pickTowerUp(); return; }
+    if(e.code==='Digit9'){ e.preventDefault(); pickBombs(); return; }
     if(smenu.contains(e.target) && (e.code==='Space'||e.code==='Enter'||e.code==='Tab')) return;
   }
   if(e.code==='KeyE'||e.code==='Space'||e.code==='ShiftRight'){ e.preventDefault(); if(!e.repeat) doUse(); return; }
   if(e.code==='KeyB'){ e.preventDefault(); if(!e.repeat && action2) action2.run(); return; }
   if(e.code==='KeyG'){ e.preventDefault(); if(!e.repeat && action3) action3.run(); return; }
   if(e.code==='KeyR'){ e.preventDefault(); if(!e.repeat) useSpecial(); return; }
+  if(e.code==='KeyX'){ e.preventDefault(); if(!e.repeat) useBomb(); return; }
   if(e.code==='KeyQ'){ e.preventDefault(); if(!e.repeat) togglePetFight(); return; }
   if(e.code==='KeyT'){ if(chatOn){ e.preventDefault(); if(!e.repeat) openChat(); } return; }
   if(e.code==='KeyP'){ e.preventDefault(); if(!e.repeat && action4) action4.run(); return; }
@@ -2503,7 +2854,7 @@ function update(dt){
     separateZombies();
     updateDrops(dt);
     petAttacks(dt);
-    updateTowers(dt);
+    updateTowers(dt); updateBombs(dt); updateLightning(dt); updateMeteors(dt); updateTornado(dt); updateQuake(dt);
     checkSwordHit();
   }
   if(defeated) return;
@@ -2595,7 +2946,7 @@ function drawMinimapAt(x,y,w,h){
   }
   ctx.fillStyle='#1D9E75'; ctx.beginPath(); ctx.arc(x+core.x*sx,y+core.y*sy,4,0,7); ctx.fill();
   ctx.fillStyle='#E24B4A';
-  for(const z of zombies){ ctx.beginPath(); ctx.arc(x+z.x*sx,y+z.y*sy,4,0,7); ctx.fill(); }
+  if(fogK<0.5) for(const z of zombies){ ctx.beginPath(); ctx.arc(x+z.x*sx,y+z.y*sy,4,0,7); ctx.fill(); }
   ctx.fillStyle='#FAC775';
   for(const c of drops){ ctx.beginPath(); ctx.arc(x+c.x*sx,y+c.y*sy,3,0,7); ctx.fill(); }
   for(const p of players){
@@ -2664,15 +3015,20 @@ function renderWorld(viewP){
   for(const z of zombies) ents.push({y:z.y,draw:()=>z.L.ranged?drawSkeleton(z):z.L.kind==='imp'?drawImp(z):z.L.kind==='wolf'?drawWolf(z):drawZombie(z)});
   for(const a of arrows) ents.push({y:a.y,draw:()=>drawArrow(a)});
   for(const a of towerArrows) ents.push({y:a.y+40,draw:()=>drawArrow(a)});
+  for(const b of bombsLive) ents.push({y:b.y+4,draw:()=>drawBomb(b)});
+  if(tornado) ents.push({y:tornado.y+10,draw:()=>drawTornado(tornado)});
   for(const t of archers) if(t.built && inView(t.x,t.y,80)) ents.push({y:t.y+22,draw:()=>drawTower(t)});
   ents.push({y:core.y,draw:()=>drawCore(core)});
+  drawCracks(); drawCraters();
   ents.sort((a,b)=>a.y-b.y);
   for(const e of ents) e.draw();
   drawFxWorld();
 
   ctx.restore();
   if(nightK>0.01) drawNight(viewP);
-  if(rainK>0.01||snowK>0.01) drawWeather();
+  if(fogK>0.01) drawFog();
+  if(metWarn.length||boltWarn.length){ ctx.save(); ctx.translate(-camX,-camY); for(const w of boltWarn) drawBoltWarn(w); for(const m of metWarn) drawMeteorWarn(m); ctx.restore(); }
+  if(rainK>0.01||snowK>0.01||flashT>0) drawWeather();
 
   for(const z of zombies){
     const sx=z.x-camX, sy=z.y-camY;
@@ -2892,7 +3248,7 @@ function frame(now){
   if(NET.mode==='client') clientUpdate(dt);
   else if(NET.mode==='host'){ if(NET.started) update(dt); hostSend(dt); }
   else if(modesEl.hidden) update(dt);
-  updatePets(dt); updateFx(dt); syncSpec();
+  updatePets(dt); updateFx(dt); syncSpec(); syncBombs();
   { const tgt=isNight(wave)&&!allDone?1:0; nightK+=Math.sign(tgt-nightK)*Math.min(Math.abs(tgt-nightK),dt*0.6); }
   updateWeather(dt);
   if(NET.mode!=='client') for(const p of players) p.action=computeActionFor(p);
@@ -2919,7 +3275,7 @@ function resetGame(){
   for(const sl of slots){ sl.built=false; sl.hp=WALL_HP; }
   for(const t of archers){ t.built=false; t.cd=0; t.aim=Math.PI/2; } towerArrows=[]; towerLv=1;
   for(const q of plots){ q.house=''; q.taken=[]; } closeHouseMenu();
-  coins=50; wallInv=0; chatOn=false; chatLog=[]; for(const p of players){ p.pet=''; p.petFight=false; p.petTarget=null; p.petCD=0; p.armor=false; p.armorHits={zombie:0, imp:0}; p.petLv=1; } closeChestMenu(); closePetMenu(); weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
+  coins=50; wallInv=0; chatOn=false; chatLog=[]; for(const p of players){ p.pet=''; p.petFight=false; p.petTarget=null; p.petCD=0; p.armor=false; p.armorHits={zombie:0, imp:0}; p.petLv=1; p.bombs=0; } bombsLive=[]; boltWarn=[]; boltT=4; metWarn=[]; meteorOn=false; craters=[]; tornado=null; torWant=false; quake=null; quakeWant=0; cracks=[]; closeChestMenu(); closePetMenu(); weapon='wood'; for(const b of bridges) b.intact=true; closeBridgeMenu(); closeSwordMenu();
   zombies=[]; drops=[]; arrows=[]; wave=0; waveTimer=WAVE_DELAY; spawnQueue=[]; allDone=false; waveLive=false; gameTime=0; comboN=0; comboT=-99; newRun(); weather=0;
   core.hp=core.maxHp; core.hitT=0; defeated=false; NET.defKind=0; overEl.hidden=true;
   resetPlayers();
@@ -3101,16 +3457,18 @@ function onHostData(p,d){
   else if(d.t==='petfight'){ setPetFight(p,!!d.on); }
   else if(d.t==='pet'){ if(nearShop(p)) buyPet(String(d.id),p); }
   else if(d.t==='petup'){ if(nearShop(p)) buyPetUp(p); }
+  else if(d.t==='buybomb'){ if(nearShop(p)) buyBombs(p); }
+  else if(d.t==='bomb'){ if(NET.started) throwBomb(p); }
   else if(d.t==='house'){ if(nearShop(p)) buyHouse(String(d.id),p); }
 }
 const r1=v=>Math.round(v*10)/10, r2=v=>Math.round(v*100)/100;
 function npcState(n){ const left=n.sayUntil-performance.now(); return [r1(n.x),r1(n.y),r2(n.fx||0),r2(n.fy==null?1:n.fy),n.moving?1:0,r2(n.t||0),left>0?n.say:'',left>0?Math.round(left):0]; }
 function snapshot(){
   return {t:'snap', st:NET.started?1:0,
-    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'',p.pet||'',p.petFight?1:0,p.petTarget?p.petTarget.id:0,r1(p.petCD||0),r1(p.fast||0),r1(p.shield||0),r1(p.power||0),p.armor?1:0,r2(p.blockT||0),r1(p.slow||0),Math.round(p.spec||0),r2(p.spinT||0),p.petLv||1]),
+    pl:players.map(p=>[p.i,r1(p.x),r1(p.y),r2(p.fx),r2(p.fy),p.moving?1:0,r2(p.t),p.scene,r2(p.swing),p.hp,r2(p.down),r2(p.inv),r2(p.hurtCD),p.tp|0,r2(p.fade),p.push?[r1(p.push.dx),r1(p.push.dy),p.push.amt,p.push.id]:0,p.name||'',p.pet||'',p.petFight?1:0,p.petTarget?p.petTarget.id:0,r1(p.petCD||0),r1(p.fast||0),r1(p.shield||0),r1(p.power||0),p.armor?1:0,r2(p.blockT||0),r1(p.slow||0),Math.round(p.spec||0),r2(p.spinT||0),p.petLv||1,p.bombs||0]),
     z:zombies.map(z=>[z.id,z.level,r1(z.x),r1(z.y),r2(z.fx),r2(z.fy),r2(z.hp),r2(z.hitT),r2(z.atkT),z.inWater?1:0,z.shooting?1:0,r2(z.t),z.aggro?1:0,z.reached?1:0,r2(z.atkCD)]),
     ar:arrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy)]),
-    tw:archers.map(t=>t.built?r2(t.aim):null), ta:towerArrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy),a.fire?1:0]), tl:towerLv,
+    tw:archers.map(t=>t.built?r2(t.aim):null), mo:meteorOn?1:0, tn:tornado?[r1(tornado.x),r1(tornado.y),r1(tornado.life),r1(tornado.t)]:0, mw:metWarn.map(m=>[r1(m.x),r1(m.y),r2(m.t)]), lw:boltWarn.map(w=>[r1(w.x),r1(w.y),r2(w.t),w.zid?1:0]), bm:bombsLive.map(b=>[r1(b.x),r1(b.y),r1(b.h),b.t>=BOMB_FLY?r2(b.fuse):-1]), ta:towerArrows.map(a=>[r1(a.x),r1(a.y),r1(a.vx),r1(a.vy),a.fire?1:0]), tl:towerLv,
     dr:drops.map(c=>[r1(c.x),r1(c.y),c.value,r2(c.t)]),
     core:[core.hp,r2(core.hitT)], co:coins, ch:chatOn?1:0, cl:chatLog.slice(-8).map(m=>[m.id,m.n,m.c,m.t]), wa:wallInv, we:weapon, wv:wave, wt:r2(waveTimer), wl:waveLive?1:0, dn:allDone?1:0, sq:spawnQueue.length,
     br:bridges.map(b=>b.intact?1:0), sl:slots.map(q=>q.built?q.hp:0), ho:plots.map(q=>q.house||''), lt:plots.map(q=>(q.taken||[]).map(t=>t?1:0).join('')),
@@ -3191,11 +3549,11 @@ function applySnap(d){
   if(NET.started && !wasStarted && !modesEl.hidden && (panels.join.hidden===false)){ started=true; closeModes(); showMsg('You joined as '+(me?dn(me):myName)+'. Good luck!'); }
   const seen=new Set();
   for(const a of d.pl){
-    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm,pt,pf,ptid,pcd,bf,bs,bp,ar,bk,sw,spc,spn,plv]=a;
+    const [slot,x,y,fx,fy,mv,an,scene,swing,hp,down,inv,hurt,tp,fade,push,nm,pt,pf,ptid,pcd,bf,bs,bp,ar,bk,sw,spc,spn,plv,bmb]=a;
     seen.add(slot);
     let p=players.find(q=>q.i===slot);
     if(!p){ p=makePlayer(slot); p.tp=-1; p.x=x; p.y=y; players.push(p); players.sort((u,v)=>u.i-v.i); }
-    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.fast=bf||0; p.shield=bs||0; p.power=bp||0; p.slow=sw||0; p.spec=spc||0; p.spinT=spn||0; p.petLv=plv||1; p.armor=!!ar; if((bk||0)>(p.blockT||0)) p.blockT=bk; p.name=cleanName(nm); p.pet=PETS[pt]?pt:'';
+    p.hp=hp; p.down=down; p.inv=inv; p.hurtCD=hurt; p.fast=bf||0; p.shield=bs||0; p.power=bp||0; p.slow=sw||0; p.spec=spc||0; p.spinT=spn||0; p.petLv=plv||1; p.bombs=bmb||0; p.armor=!!ar; if((bk||0)>(p.blockT||0)) p.blockT=bk; p.name=cleanName(nm); p.pet=PETS[pt]?pt:'';
     if(!(p===me && performance.now()<(me.petFightUntil||0))) p.petFight=!!pf;
     p.petTargetId=ptid||0; if((pcd||0)>(p.petCD||0)+1) p.petAtk=0.3; p.petCD=pcd||0;
     if(slot===NET.slot){
@@ -3222,6 +3580,9 @@ function applySnap(d){
   arrows=d.ar.map(a=>({x:a[0],y:a[1],vx:a[2],vy:a[3]}));
   if(Array.isArray(d.tw)){ let tch=false; d.tw.forEach((v,i)=>{ const t=archers[i]; if(!t) return; const b=v!=null; if(t.built!==b){ t.built=b; tch=true; } if(b) t.aim=+v||0; }); if(tch) buildMini(); }
   if(Array.isArray(d.ta)) towerArrows=d.ta.map(a=>({x:a[0],y:a[1],vx:a[2],vy:a[3],fire:!!a[4]}));
+  if(Array.isArray(d.mw)) metWarn=d.mw.map(a=>({x:a[0],y:a[1],t:a[2]}));
+  if(Array.isArray(d.lw)) boltWarn=d.lw.map(a=>({x:a[0],y:a[1],t:a[2],zid:a[3]}));
+  if(Array.isArray(d.bm)) bombsLive=d.bm.map(a=>({x:a[0],y:a[1],h:a[2],t:a[3]<0?0:BOMB_FLY,fuse:a[3]<0?BOMB_FUSE:a[3]}));
   if(d.tl) towerLv=Math.max(1,Math.min(4,d.tl|0));
   drops=d.dr.map(a=>({x:a[0],y:a[1],value:a[2],t:a[3]}));
   core.hp=d.core[0]; core.hitT=d.core[1];
@@ -3229,7 +3590,7 @@ function applySnap(d){
   let changed=false;
   d.br.forEach((v,i)=>{ if(bridges[i].intact!==!!v){ bridges[i].intact=!!v; changed=true; } });
   d.sl.forEach((v,i)=>{ slots[i].hp=v||WALL_HP; if(slots[i].built!==!!v){ slots[i].built=!!v; changed=true; } });
-  endless=!!d.em; weather=(d.wx|0)%3;
+  endless=!!d.em; weather=(d.wx|0)%4; meteorOn=!!d.mo; tornado=Array.isArray(d.tn)?{x:d.tn[0],y:d.tn[1],life:d.tn[2],t:d.tn[3]}:null;
   takeFx(d.fx);
   if(Array.isArray(d.lt)) d.lt.forEach((v,i)=>{ if(plots[i]) plots[i].taken=String(v||'').split('').map(c=>c==='1'); });
   if(Array.isArray(d.ho)) d.ho.forEach((v,i)=>{ v=HOUSES[v]?v:''; if(plots[i] && plots[i].house!==v){ plots[i].house=v; changed=true; } });
@@ -3634,7 +3995,7 @@ friendList.addEventListener('click',e=>{
   const p=e.target.closest('button[data-fpid]'); if(p){ askToJoin(p.dataset.fpid,p.dataset.name,friendStatus,'friends'); return; }
   const r=e.target.closest('button[data-rem]'); if(r){ friends=friends.filter(x=>x.uid!==r.dataset.rem); saveFriends(); renderFriendList(); }
 });
-if(window.VD_TEST) window.VD_TEST.get=()=>({fieldAt:(x,y,imp)=>{ buildField(imp?1:0); return (imp?impField:field)[cellOf(x,y)]; }, walkAt:(x,y)=>walk[cellOf(x,y)], placeWall, WALL_Y, GATE, RX, RY, plots, HOUSES, buyHouse, interiors, archers, buyTower, buyTowerUp, doSpecial, buyPet, buyPetUp, setWeather:(w)=>{ weather=w; }, getWeather:()=>weather, towerLvGet:()=>towerLv, HOUSE_ROOMS, blockedRoom, refillLoot, buyArmor, hurtPlayer, players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,PETS,friends:()=>friends,chat:()=>({on:chatOn,log:chatLog}),cleanChat,uid:()=>MYUID,price,set:(k,v)=>{ if(k==='coins') coins=v; if(k==='wallInv') wallInv=v; }});
+if(window.VD_TEST) window.VD_TEST.get=()=>({fieldAt:(x,y,imp)=>{ buildField(imp?1:0); return (imp?impField:field)[cellOf(x,y)]; }, walkAt:(x,y)=>walk[cellOf(x,y)], placeWall, WALL_Y, GATE, RX, RY, plots, HOUSES, buyHouse, interiors, archers, buyTower, buyTowerUp, doSpecial, buyPet, buyPetUp, buyBombs, throwBomb, boltWarnList:()=>boltWarn, metList:()=>metWarn, startTornado:()=>{ startTornado(); }, getTornado:()=>tornado, startQuake:()=>{ quakeWant=0.01; }, getCracks:()=>cracks, setMeteor:(v)=>{ meteorOn=v; metT=0; }, getFogK:()=>fogK, setBoltT:(v)=>{ boltT=v; }, setWeather:(w)=>{ weather=w; }, getWeather:()=>weather, towerLvGet:()=>towerLv, HOUSE_ROOMS, blockedRoom, refillLoot, buyArmor, hurtPlayer, players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,PETS,friends:()=>friends,chat:()=>({on:chatOn,log:chatLog}),cleanChat,uid:()=>MYUID,price,set:(k,v)=>{ if(k==='coins') coins=v; if(k==='wallInv') wallInv=v; }});
 })();
 </script>
 </body>
