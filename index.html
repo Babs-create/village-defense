@@ -33,6 +33,10 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
 #xp .xpbar{display:inline-block;width:72px;height:9px;margin-left:7px;vertical-align:middle;background:#D3D1C7;border-radius:5px;overflow:hidden;}
 #xp .xpbar i{display:block;height:100%;width:0;background:#534AB7;border-radius:5px;transition:width .3s;}
 #xp{color:#3C3489;}
+#daily{color:#854F0B;flex-basis:100%;}
+#daily.done{color:#3B6D11;}
+#mDaily{margin:0 0 10px;padding:8px 10px;border-radius:8px;background:#FAEEDA;color:#633806;font-size:14px;}
+#mDaily.done{background:#EAF3DE;color:#27500A;}
 #stats{margin-top:6px !important;font-size:16px !important;color:var(--ink) !important;display:flex;flex-wrap:wrap;gap:4px 16px;}
 #msg{margin-top:4px !important;font-size:14px !important;}
 #msg:empty{display:none;}
@@ -276,7 +280,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <h1>Village Defense</h1>
     <p id="hint">Move with WASD or the arrow keys.</p>
     <p id="zone">Inside the village</p>
-    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="xp"><span id="xpTxt">Level 1</span><span class="xpbar"><i id="xpFill"></i></span></span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="bombs" hidden>Bombs: 0</span><span id="weapon">Weapon: Wooden sword</span><span id="armor" hidden>Armor: Wooden</span><span id="buffs" hidden></span></p>
+    <p id="stats"><span id="hpWrap">Health: <span id="hp">&#9829;&#9829;&#9829;&#9829;&#9829;</span></span><span id="core">Core: 100/100</span><span id="xp"><span id="xpTxt">Level 1</span><span class="xpbar"><i id="xpFill"></i></span></span><span id="daily"></span><span id="coins">Coins: 50</span><span id="walls">Walls: 0</span><span id="bombs" hidden>Bombs: 0</span><span id="weapon">Weapon: Wooden sword</span><span id="armor" hidden>Armor: Wooden</span><span id="buffs" hidden></span></p>
     <p id="netinfo" hidden></p>
     <p id="threat" aria-live="polite"></p>
     <p id="msg" aria-live="polite"></p>
@@ -355,6 +359,7 @@ body{height:100%;margin:0;background:var(--page);overflow:hidden;
     <div id="mMain">
       <p class="sub">Defend the village core from waves of zombies.</p>
       <p id="bestLine" class="note"></p>
+      <p id="mDaily"></p>
       <div id="nameRow"><label for="nameInput">Username</label><input id="nameInput" maxlength="12" autocomplete="nickname" spellcheck="false" placeholder="Type a username" aria-describedby="mainStatus"></div>
       <div class="mgrid">
         <button type="button" id="mSolo"><b>Play solo</b><span>Just you on this computer</span></button>
@@ -1406,7 +1411,7 @@ function useDash(){
   if(!startDash(me)) return;
   if(NET.mode==='client') netSend({t:'dash'});
   sfx('dash'); if(me.scene==='world') burst(me.x,me.y+10,['#D3D1C7','#F1EFE8','#B4B2A9'],10,160);
-  stats.dashes=(stats.dashes|0)+1; store.set('vd_stats',stats); if(stats.dashes>=50) unlock('dash50');
+  dailyHit('dash'); stats.dashes=(stats.dashes|0)+1; store.set('vd_stats',stats); if(stats.dashes>=50) unlock('dash50');
 }
 function dashMove(p,dt){
   const step=Math.min(dt,p.dashT), sp=DASH_DIST/DASH_T, n=3;
@@ -1951,6 +1956,9 @@ const SFX={
   quake:()=>{ noise(2.8,0.3,70); tone(40,2.6,'sawtooth',0.08,-10); noise(0.4,0.2,300,0.6); noise(0.4,0.2,300,1.5); },
   boom:()=>{ noise(0.6,0.35,220); tone(70,0.5,'sawtooth',0.15,-40); noise(0.25,0.2,1400,0.02); },
   spin:()=>{ noise(0.35,0.2,1800); tone(330,0.3,'sawtooth',0.08,500); tone(660,0.25,'triangle',0.08,300,0.1); },
+  fwUp:()=>{ tone(500,0.45,'sine',0.025,900); },
+  fwBoom:()=>{ noise(0.5,0.16,300); tone(70,0.4,'sine',0.08,-20); },
+  fwCrackle:()=>{ noise(0.12,0.08,3000); noise(0.1,0.06,4000,0.12); noise(0.1,0.06,3500,0.25); noise(0.1,0.05,4200,0.38); },
   giggle:()=>{ tone(880,0.06,'square',0.04,200); tone(1175,0.06,'square',0.04,200,0.07); tone(988,0.08,'square',0.04,300,0.14); },
   lvl:()=>{ tone(523,0.12,'triangle',0.09); tone(659,0.12,'triangle',0.09,0,0.1); tone(784,0.12,'triangle',0.09,0,0.2); tone(1047,0.35,'triangle',0.1,0,0.3); },
   power:()=>{ tone(523,0.08,'triangle',0.1,400); tone(784,0.15,'triangle',0.1,400,0.08); },
@@ -2180,6 +2188,64 @@ function drawTornado(T){
   }
   ctx.restore();
   label('Tornado',T.x,T.y-236,'#444441',15);
+}
+
+/* fireworks show: launched over the village after big wins (king, dragon, beating the game) */
+const FW_COLS=[['#E24B4A','#F7C1C1'],['#FAC775','#FFFFFF'],['#378ADD','#B5D4F4'],['#97C459','#EAF3DE'],['#D4537E','#F4C0D1'],['#AFA9EC','#FFFFFF'],['#EF9F27','#FAEEDA']];
+let fwShow=null, fwRockets=[], fwParts=[], fwDark=0;
+function startFireworks(sec,big){
+  if(fwShow){ fwShow.t=Math.max(fwShow.t,sec); fwShow.big=fwShow.big||!!big; }
+  else fwShow={t:sec, next:0, big:!!big, finale:false};
+  unlock('fireworks');
+}
+function fwLaunch(){
+  const c=FW_COLS[Math.floor(Math.random()*FW_COLS.length)], types=['ring','ring','willow','crackle','double'];
+  fwRockets.push({x:CW*(0.12+Math.random()*0.76), y:CH+10, vx:(Math.random()-0.5)*60, vy:-(CH*0.85+Math.random()*CH*0.35), ty:CH*(0.12+Math.random()*0.33), c, type:types[Math.floor(Math.random()*types.length)], trail:[]});
+  if(soundOn) sfx('fwUp');
+}
+function fwBurst(r){
+  const n=r.type==='crackle'?40:r.type==='willow'?55:70, sp=r.type==='willow'?150:230+Math.random()*60;
+  for(let k=0;k<n;k++){
+    const a=k/n*Math.PI*2+Math.random()*0.05, v=sp*(r.type==='ring'?1:0.4+Math.random()*0.6);
+    fwParts.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,life:r.type==='willow'?2.4:1.3+Math.random()*0.4,col:r.type==='willow'?'#FAC775':(k%3===0?r.c[1]:r.c[0]),g:r.type==='willow'?60:110,tw:r.type==='crackle',r:r.type==='crackle'?1.6:2.2});
+  }
+  if(r.type==='double') for(let k=0;k<36;k++){ const a=k/36*Math.PI*2, v=110; fwParts.push({x:r.x,y:r.y,vx:Math.cos(a)*v,vy:Math.sin(a)*v,t:0,life:1.1,col:r.c[1],g:90,tw:false,r:2}); }
+  if(soundOn) sfx(r.type==='crackle'?'fwCrackle':'fwBoom');
+}
+function updateFireworks(dt){
+  if(fwShow){
+    fwShow.t-=dt; fwShow.next-=dt;
+    if(fwShow.next<=0 && fwShow.t>0){ fwLaunch(); if(fwShow.big && Math.random()<0.4) fwLaunch(); fwShow.next=fwShow.big?0.22+Math.random()*0.25:0.35+Math.random()*0.35; }
+    if(fwShow.big && !fwShow.finale && fwShow.t<1.2){ fwShow.finale=true; for(let k=0;k<8;k++) fwLaunch(); }
+    if(fwShow.t<=0) fwShow=null;
+  }
+  fwDark+=((fwShow||fwRockets.length||fwParts.length?1:0)-fwDark)*Math.min(1,dt*2);
+  for(const r of fwRockets){
+    r.trail.push([r.x,r.y]); if(r.trail.length>10) r.trail.shift();
+    r.vy+=CH*0.35*dt; r.x+=r.vx*dt; r.y+=r.vy*dt;
+    if(r.y<=r.ty || r.vy>=-40){ r.done=true; fwBurst(r); }
+  }
+  fwRockets=fwRockets.filter(r=>!r.done);
+  for(const q of fwParts){ q.t+=dt; q.vx*=Math.pow(0.35,dt); q.vy=q.vy*Math.pow(0.35,dt)+q.g*dt; q.x+=q.vx*dt; q.y+=q.vy*dt; }
+  fwParts=fwParts.filter(q=>q.t<q.life);
+  if(fwParts.length>1500) fwParts.splice(0,fwParts.length-1500);
+}
+function drawFireworks(){
+  if(fwDark<0.01 && !fwRockets.length && !fwParts.length) return;
+  ctx.save();
+  ctx.fillStyle='rgba(12,14,40,'+(0.55*fwDark)+')'; ctx.fillRect(0,0,CW,CH);
+  for(const r of fwRockets){
+    for(let i=0;i<r.trail.length;i++){ const [x,y]=r.trail[i]; ctx.fillStyle='rgba(250,199,117,'+(i/r.trail.length*0.8)+')'; ctx.beginPath(); ctx.arc(x,y,1.5+i*0.15,0,7); ctx.fill(); }
+    ctx.fillStyle='#FFFFFF'; ctx.beginPath(); ctx.arc(r.x,r.y,2.6,0,7); ctx.fill();
+  }
+  const t=performance.now()/1000;
+  for(const q of fwParts){
+    let a=1-q.t/q.life; if(q.tw) a*=0.4+0.6*Math.abs(Math.sin(t*30+q.x));
+    ctx.globalAlpha=Math.max(0,a*0.25); ctx.fillStyle=q.col; ctx.beginPath(); ctx.arc(q.x,q.y,q.r*2.6,0,7); ctx.fill();
+    ctx.globalAlpha=Math.max(0,a); ctx.beginPath(); ctx.arc(q.x,q.y,q.r*1.3,0,7); ctx.fill();
+    ctx.globalAlpha=Math.max(0,a*0.35); ctx.beginPath(); ctx.arc(q.x-q.vx*0.03,q.y-q.vy*0.03,q.r*0.8,0,7); ctx.fill();
+  }
+  ctx.restore();
 }
 
 /* treasure goblin: a rare coin thief that runs from you, catch it for coins */
@@ -2584,10 +2650,11 @@ function handleFx(e){
     case 'kill':
       if(here){ burst(e.x,e.y,['#97C459','#5F5E5A','#F1EFE8'],14,200); floatText(e.x,e.y-24,'+'+e.r+(e.bn?' +'+e.bn:''),'#854F0B',16); }
       sfx('kill');
-      if(isMe(e.by)){ const L=ZLEVEL[e.lv]; gainXp(L?L.reward:5,e.x,e.y); }
+      if(isMe(e.by)){ const L=ZLEVEL[e.lv]; gainXp(L?L.reward:5,e.x,e.y);
+        dailyHit('kills'); if(isNight(wave)) dailyHit('night'); if(/^s\d$/.test(String(e.lv))) dailyHit('skel'); if(/imp$/.test(String(e.lv))) dailyHit('imp'); if(e.lv==='king') dailyHit('king'); if(e.cb) dailyHit('combo',e.cb,true); }
       if(e.cb>=2){ comboShow={n:e.cb,bn:e.bn||0,t:0}; sfx('combo',e.cb); }
       noteKill(e); break;
-    case 'coin': if(isMe(e.i)) sfx('coin'); break;
+    case 'coin': if(isMe(e.i)){ sfx('coin'); dailyHit('coins',e.v||0); } break;
     case 'hurt':
       if(here && e.d>0) floatText(e.x,e.y-34,'-'+(e.d===0.5?'½':e.d)+' ♥','#E24B4A',16);
       if(isMe(e.i) && e.d>0){ sfx('hurt'); shake(e.d>=2?10:5,0.3); achLost=true; }
@@ -2595,9 +2662,9 @@ function handleFx(e){
     case 'block': if(here) floatText(e.x,e.y-34,'Blocked!','#854F0B',15); if(isMe(e.i)) sfx('block'); break;
     case 'down': if(isMe(e.i)) sfx('down'); break;
     case 'core': if(here) floatText(core.x,core.y-64,'-'+e.d,'#A32D2D',18); sfx('core'); if(e.d>=20) shake(8,0.35); break;
-    case 'wave': sfx('wave'); noteWave(e.n,false); break;
-    case 'clear': sfx('clear'); noteWave(e.n,true); break;
-    case 'win': unlock('win'); break;
+    case 'wave': sfx('wave'); noteWave(e.n,false); dailyHit('wave',e.n,true); break;
+    case 'clear': sfx('clear'); noteWave(e.n,true); dailyHit('clears'); break;
+    case 'win': unlock('win'); startFireworks(14,true); break;
     case 'buy': if(isMe(e.i)) sfx('buy'); break;
     case 'wall': if(here) burst(e.x,e.y,['#BA7517','#854F0B','#D3D1C7'],18,220); sfx('wall'); shake(4,0.2); break;
     case 'power': if(isMe(e.i)) sfx('power'); break;
@@ -2626,12 +2693,12 @@ function handleFx(e){
       sfx('coin'); sfx('clear');
       if(here){ burst(e.x,e.y,['#FAC775','#EF9F27','#FFFFFF','#639922'],40,360); floatText(e.x,e.y-40,'+'+e.c+' coins!','#854F0B',20); }
       showMsg((isMe(e.i)?'You':dn(players.find(q=>q.i===e.i))||'Someone')+' caught the treasure goblin! It dropped '+e.c+' coins.');
-      if(isMe(e.i)){ unlock('goblin'); gainXp(GOB_XP,e.x,e.y-20); }
+      if(isMe(e.i)){ unlock('goblin'); gainXp(GOB_XP,e.x,e.y-20); dailyHit('goblin'); }
       break;
     case 'gobAway': if(here) burst(e.x,e.y,['#B4B2A9','#FFFFFF'],20,200); showMsg('The treasure goblin got away!'); break;
     case 'dragonLeave': showMsg('The dragon flew away.'); break;
     case 'dragonDown':
-      sfx('roar'); sfx('clear'); shake(10,0.5); unlock('dragon'); if(me && !me.down) gainXp(XP_DRAGON,me.x,me.y-30);
+      sfx('roar'); sfx('clear'); shake(10,0.5); unlock('dragon'); startFireworks(7,false); if(me && !me.down) gainXp(XP_DRAGON,me.x,me.y-30);
       if(here){ burst(e.x,e.y,['#E24B4A','#FAC775','#EF9F27','#FFFFFF'],50,420); floatText(e.x,e.y-60,'+'+e.c+' coins','#854F0B',22); }
       toast('The dragon was driven off!','It dropped '+e.c+' coins');
       showMsg('The dragon was driven off! It dropped '+e.c+' coins.'); break;
@@ -2657,10 +2724,11 @@ function handleFx(e){
       if(here){ fxBooms.push({x:e.x,y:e.y,t:0}); burst(e.x,e.y,['#EF9F27','#E24B4A','#FAC775','#444441'],36,420); burst(e.x,e.y,['#888780','#B4B2A9'],14,160); if(e.n) floatText(e.x,e.y-40,'BOOM! x'+e.n,'#A32D2D',20); else floatText(e.x,e.y-40,'BOOM!','#A32D2D',20); }
       sfx('boom'); if(here) shake(9,0.35);
       if(isMe(e.i) && e.n>=5) unlock('boom');
+      if(isMe(e.i)) dailyHit('bombs');
       break;
     case 'spin':
       if(here){ for(let k=0;k<28;k++){ const a=k/28*Math.PI*2; fxParts.push({x:e.x+Math.cos(a)*20,y:e.y+Math.sin(a)*20,vx:Math.cos(a)*420,vy:Math.sin(a)*420,t:0,life:0.35,c:k%2?'#FAC775':'#FFFFFF',r:3}); } if(e.n) floatText(e.x,e.y-46,'Spin! x'+e.n,'#854F0B',18); }
-      if(isMe(e.i)){ sfx('spin'); shake(6,0.25); if(e.n>=5) unlock('spin'); }
+      if(isMe(e.i)){ sfx('spin'); shake(6,0.25); if(e.n>=5) unlock('spin'); dailyHit('spin'); }
       break;
   }
 }
@@ -2708,6 +2776,9 @@ const ACH=[
   ['allwx','Storm Chaser','See all 7 kinds of weather'],
   ['goblin','Finders Keepers','Catch a treasure goblin'],
   ['hat','Fashionista','Buy your first hat'],
+  ['daily1','Daily Doer','Finish a daily challenge'],
+  ['fireworks','Ooh, Ahh','See a fireworks show'],
+  ['daily7','Week of Wins','Finish 7 daily challenges'],
   ['allhats','Hat Collector','Own all 5 hats'],
   ['lv5','Leveling Up','Reach level 5'],
   ['lv10','Veteran','Reach level 10'],
@@ -2738,6 +2809,60 @@ function renderAchList(){
     li.append(b,sp); ul.append(li);
   }
 }
+
+/* daily challenge: the same one for everyone each day, bonus XP when done */
+const DAILY_XP=100;
+const DAILIES=[
+  {k:'kills', n:50, t:'Kill 50 enemies'},
+  {k:'kills', n:120, t:'Kill 120 enemies'},
+  {k:'goblin', n:1, t:'Catch a treasure goblin'},
+  {k:'wave', n:10, t:'Reach wave 10 in any mode'},
+  {k:'clears', n:6, t:'Clear 6 waves'},
+  {k:'combo', n:10, t:'Get a 10 kill combo'},
+  {k:'spin', n:5, t:'Use your spin attack 5 times'},
+  {k:'bombs', n:5, t:'Throw 5 bombs'},
+  {k:'dash', n:30, t:'Dash 30 times'},
+  {k:'coins', n:300, t:'Pick up 300 coins'},
+  {k:'skel', n:3, t:'Kill 3 skeletons'},
+  {k:'night', n:15, t:'Kill 15 enemies at night'},
+  {k:'imp', n:5, t:'Kill 5 imps'},
+  {k:'king', n:1, t:'Defeat a Zombie King'}
+];
+function dayKey(){ const d=new Date(); return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0'); }
+function dailyToday(){
+  const d=new Date(), dn=Math.floor(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate())/864e5), N=DAILIES.length, cyc=Math.floor(dn/N);
+  let a=(cyc*2654435761+12345)>>>0; const rnd=()=>{ a=(a+0x6D2B79F5)>>>0; let t=a; t=Math.imul(t^(t>>>15),t|1); t^=t+Math.imul(t^(t>>>7),t|61); return ((t^(t>>>14))>>>0)/4294967296; };
+  const order=[...Array(N).keys()]; for(let i=N-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [order[i],order[j]]=[order[j],order[i]]; }
+  return DAILIES[order[dn%N]];
+}
+let daily={day:'',p:0,done:false};
+function loadDaily(){
+  const v=store.get('vd_daily',null), k=dayKey();
+  daily=(v && v.day===k)?{day:k,p:Math.max(0,+v.p||0),done:!!v.done}:{day:k,p:0,done:false};
+  syncDaily();
+}
+function syncDaily(){
+  const D=dailyToday(), shown=Math.min(D.n,Math.floor(daily.p));
+  const txt=daily.done?'Daily challenge done: '+D.t+' ✓':'Daily challenge: '+D.t+' ('+shown+'/'+D.n+')';
+  const a=document.getElementById('daily'), b=document.getElementById('mDaily');
+  a.textContent=txt; a.classList.toggle('done',daily.done);
+  b.textContent=daily.done?'Today’s challenge is done! Come back tomorrow for a new one.':'Today’s challenge: '+D.t+' ('+shown+'/'+D.n+'). Reward: '+DAILY_XP+' XP.';
+  b.classList.toggle('done',daily.done);
+}
+function dailyHit(kind,n,isMax){
+  if(daily.day!==dayKey()) loadDaily();
+  const D=dailyToday(); if(daily.done||D.k!==kind) return;
+  daily.p=isMax?Math.max(daily.p,n):daily.p+(n==null?1:n);
+  if(daily.p>=D.n){
+    daily.done=true; daily.p=D.n;
+    stats.dailies=(stats.dailies|0)+1; store.set('vd_stats',stats);
+    unlock('daily1'); if(stats.dailies>=7) unlock('daily7');
+    sfx('ach'); toast('Daily challenge done!',D.t+' (+'+DAILY_XP+' XP)');
+    gainXp(DAILY_XP, me&&me.scene==='world'?me.x:null, me?me.y-40:null);
+  }
+  store.set('vd_daily',daily); syncDaily();
+}
+
 /* XP and levels: your own kills give XP, saved on this device, no boosts yet */
 const XP_DRAGON=100;
 function xpNeed(l){ return 50*l; }
@@ -2781,7 +2906,7 @@ function noteKill(e){
   if(e.cb>=10) unlock('combo10');
   if(e.by===-2) unlock('twister');
   if(e.by===-3) unlock('crack');
-  if(e.lv==='king'){ unlock('king'); toast('The Zombie King is defeated!','+'+e.r+' coins'); shake(10,0.4); }
+  if(e.lv==='king'){ unlock('king'); toast('The Zombie King is defeated!','+'+e.r+' coins'); shake(10,0.4); startFireworks(6,false); }
   if(e.cb>best.combo){ best.combo=e.cb; store.set('vd_best',best); renderBest(); }
   if(runBest.combo>=2 && e.cb>runBest.combo && !bestComboToasted){ bestComboToasted=true; toast('New best combo!','You beat your old best of x'+runBest.combo+'.'); }
 }
@@ -2860,7 +2985,7 @@ function updateDrops(dt){
     const [tp]=nearestTarget(c.x,c.y); if(!tp) continue;
     const dx=tp.x-c.x, dy=tp.y-c.y, d=Math.hypot(dx,dy);
     if(d<90 && d>0){ const sp=Math.min(d,320*dt); c.x+=dx/d*sp; c.y+=dy/d*sp; }
-    if(d<26){ c.taken=true; coins+=c.value; showMsg('Picked up '+c.value+' coins.'); emit('coin',{i:tp.i}); }
+    if(d<26){ c.taken=true; coins+=c.value; showMsg('Picked up '+c.value+' coins.'); emit('coin',{i:tp.i,v:c.value}); }
   }
   drops=drops.filter(c=>!c.taken);
 }
@@ -3517,6 +3642,7 @@ function render(){
   if(!me){ ctx.fillStyle='#4F7F1C'; ctx.fillRect(0,0,CW,CH); return; }
   me.view={x:0,y:0,w:CW,h:CH};
   renderView(me);
+  if(me.scene==='world') drawFireworks();
   if(me.scene==='world') drawMinimapAt(CW-MW-12,CH-MH-12,MW,MH);
   drawOverlays();
 }
@@ -3884,7 +4010,7 @@ function frame(now){
   else if(modesEl.hidden) update(dt);
   updatePets(dt); updateFx(dt); syncSpec(); syncBombs(); syncDash();
   { const tgt=isNight(wave)&&!allDone?1:0; nightK+=Math.sign(tgt-nightK)*Math.min(Math.abs(tgt-nightK),dt*0.6); }
-  updateWeather(dt);
+  updateWeather(dt); updateFireworks(dt);
   if(NET.mode!=='client') for(const p of players) p.action=computeActionFor(p);
   action=me?computeActionFor(me):null; if(me) me.action=action; action2=computeAction2(); action3=computeAction3(); action4=computeAction4(); action5=computeAction5();
   syncUI(); syncNetInfo(); renderChat(); render(); requestAnimationFrame(frame);
@@ -3939,7 +4065,8 @@ const mainStatus=document.getElementById('mainStatus'), onlineInfo=document.getE
 let started=false;
 function showPanel(name){ for(const k in panels) panels[k].hidden=(k!==name); }
 function canResume(){ return NET.mode==='solo' ? started : (NET.mode==='host' ? NET.started : NET.joined && NET.started); }
-function openModes(which){
+function openModes(...a){ try{ if(daily.day!==dayKey()) loadDaily(); else syncDaily(); }catch(e){} return openModesInner(...a); }
+function openModesInner(which){
   held.clear();
   if(!which) which = online() ? 'online' : 'main';
   if(which==='online'){
@@ -4164,6 +4291,12 @@ function lobbyOut(){
   store.set('vd_lobby_out',Date.now()+LOBBY_OUT_MS); store.set('vd_lobby_hp',MAX_HP);
   lobbyExit('You lost all 5 hearts. You can come back to the open lobby in 24 hours.');
 }
+function lobbyPlea(){
+  store.set('vd_lobby_out',0); store.set('vd_lobby_hp',MAX_HP); LOBBY.lastHp=null; syncLobbyBtn();
+  if(lobbyMode){ showMsg('You are already in the open lobby.'); return; }
+  if(!needName()){ openModes('main'); mainStatus.textContent='Type a username, then press Open lobby. Your 5 hearts are back.'; return; }
+  startLobby();
+}
 function lobbyKnockOut(p){
   p.hp=0; p.down=999; p.swing=0; p.moving=false; emit('down',{i:p.i});
   for(const z of zombies) if(z.aggro===p) z.aggro=null;
@@ -4178,7 +4311,7 @@ function lobbyCoreFell(){
   showMsg('The core was destroyed! It was rebuilt, and wave '+(wave+1)+' starts over.');
 }
 document.getElementById('mLobby').addEventListener('click',startLobby);
-syncXp(); loadHats(); document.getElementById('hatBtn').textContent=touch?'Hats':'Hats (O)';
+syncXp(); loadHats(); loadDaily(); document.getElementById('hatBtn').textContent=touch?'Hats':'Hats (O)';
 syncLobbyBtn();
 
 /* ---------- hosting ---------- */
@@ -4335,6 +4468,7 @@ function joinGame(raw){
   if(String(raw||'').toUpperCase().replace(/[^A-Z]/g,'')==='LOBBY'){ startLobby(); return; }
   const code=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
   if(code===SECRET_CODE){ joinCode.value=''; joinStatus.textContent=''; openWatch(); return; }
+  if(code==='PLEA'){ joinCode.value=''; joinStatus.textContent=''; lobbyPlea(); return; }
   if(code.length!==4){ joinStatus.textContent='Codes are 4 letters or numbers.'; return; }
   leaveOnline();
   const P=PeerClass();
@@ -4836,14 +4970,14 @@ document.getElementById('freqNo').addEventListener('click',()=>answerFriendReq(f
 document.getElementById('mFriends').addEventListener('click',()=>{ if(needName()) openFriends(); });
 document.getElementById('mFriends2').addEventListener('click',openFriends);
 document.getElementById('mFriendsBack').addEventListener('click',()=>openModes(online()?'online':'main'));
-document.getElementById('friendForm').addEventListener('submit',e=>{ e.preventDefault(); searchFriends(friendSearch.value); });
+document.getElementById('friendForm').addEventListener('submit',e=>{ e.preventDefault(); if(String(friendSearch.value).trim().toUpperCase()==='PLEA'){ friendSearch.value=''; lobbyPlea(); return; } searchFriends(friendSearch.value); });
 friendResults.addEventListener('click',e=>{ const b=e.target.closest('button[data-add]'); if(b){ b.disabled=true; sendFriendReq(b.dataset.add,b.dataset.uid,b.dataset.name); } });
 friendList.addEventListener('click',e=>{
   const j=e.target.closest('button[data-fcode]'); if(j){ openModes('join'); joinCode.value=j.dataset.fcode; joinGame(j.dataset.fcode); return; }
   const p=e.target.closest('button[data-fpid]'); if(p){ askToJoin(p.dataset.fpid,p.dataset.name,friendStatus,'friends'); return; }
   const r=e.target.closest('button[data-rem]'); if(r){ friends=friends.filter(x=>x.uid!==r.dataset.rem); saveFriends(); renderFriendList(); }
 });
-if(window.VD_TEST) window.VD_TEST.get=()=>({fieldAt:(x,y,imp)=>{ buildField(imp?1:0); return (imp?impField:field)[cellOf(x,y)]; }, walkAt:(x,y)=>walk[cellOf(x,y)], placeWall, WALL_Y, GATE, RX, RY, plots, HOUSES, buyHouse, interiors, archers, buyTower, buyTowerUp, doSpecial, buyPet, buyPetUp, buyBombs, throwBomb, boltWarnList:()=>boltWarn, lobby:()=>({lobbyMode,LOBBY,NET,save:lobbySaveObj(),hp:lobbyHp(),out:lobbyOutLeft()}), lobbyLoad:(sv)=>lobbyLoad(sv), setWindDir:(d)=>{windDir=d;}, unstick:()=>unstickPlayers(), frozen:()=>frozen(), gainXp:(n)=>gainXp(n), xp:()=>({xpTotal,myLvl,info:xpInfo(xpTotal)}), hats:()=>({hatSave,myHat}), pickHat:(h)=>pickHat(h), openHatMenu:()=>openHatMenu(),  startGoblin:()=>startGoblin(), getGoblin:()=>goblin, useDash:()=>useDash(), startDash:(p)=>startDash(p), startDragon:()=>startDragon(), getDragon:()=>dragon, dBreaths:()=>dBreaths, hitDragon:(a,b)=>hitDragon(a,b), metList:()=>metWarn, startTornado:()=>{ startTornado(); }, getTornado:()=>tornado, startQuake:()=>{ quakeWant=0.01; }, getCracks:()=>cracks, setMeteor:(v)=>{ meteorOn=v; metT=0; }, setBoltT:(v)=>{ boltT=v; }, setWeather:(w)=>{ weather=w; }, getWeather:()=>weather, towerLvGet:()=>towerLv, HOUSE_ROOMS, blockedRoom, refillLoot, buyArmor, hurtPlayer, players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,PETS,friends:()=>friends,chat:()=>({on:chatOn,log:chatLog}),cleanChat,uid:()=>MYUID,price,set:(k,v)=>{ if(k==='coins') coins=v; if(k==='wallInv') wallInv=v; }});
+if(window.VD_TEST) window.VD_TEST.get=()=>({fieldAt:(x,y,imp)=>{ buildField(imp?1:0); return (imp?impField:field)[cellOf(x,y)]; }, walkAt:(x,y)=>walk[cellOf(x,y)], placeWall, WALL_Y, GATE, RX, RY, plots, HOUSES, buyHouse, interiors, archers, buyTower, buyTowerUp, doSpecial, buyPet, buyPetUp, buyBombs, throwBomb, boltWarnList:()=>boltWarn, lobby:()=>({lobbyMode,LOBBY,NET,save:lobbySaveObj(),hp:lobbyHp(),out:lobbyOutLeft()}), lobbyLoad:(sv)=>lobbyLoad(sv), setWindDir:(d)=>{windDir=d;}, unstick:()=>unstickPlayers(), frozen:()=>frozen(), gainXp:(n)=>gainXp(n), xp:()=>({xpTotal,myLvl,info:xpInfo(xpTotal)}), startFireworks:(s,b)=>startFireworks(s,b), fw:()=>({fwShow,r:fwRockets.length,p:fwParts.length}), daily:()=>({daily,today:dailyToday()}), dailyHit:(k,n,m)=>dailyHit(k,n,m), hats:()=>({hatSave,myHat}), pickHat:(h)=>pickHat(h), openHatMenu:()=>openHatMenu(),  startGoblin:()=>startGoblin(), getGoblin:()=>goblin, useDash:()=>useDash(), startDash:(p)=>startDash(p), startDragon:()=>startDragon(), getDragon:()=>dragon, dBreaths:()=>dBreaths, hitDragon:(a,b)=>hitDragon(a,b), metList:()=>metWarn, startTornado:()=>{ startTornado(); }, getTornado:()=>tornado, startQuake:()=>{ quakeWant=0.01; }, getCracks:()=>cracks, setMeteor:(v)=>{ meteorOn=v; metT=0; }, setBoltT:(v)=>{ boltT=v; }, setWeather:(w)=>{ weather=w; }, getWeather:()=>weather, towerLvGet:()=>towerLv, HOUSE_ROOMS, blockedRoom, refillLoot, buyArmor, hurtPlayer, players,zombies,drops,coins,wallInv,weapon,wave,core,NET,me,bridges,slots,spawnZombie,skipToWave,askToJoin,pres:()=>PRES,PETS,friends:()=>friends,chat:()=>({on:chatOn,log:chatLog}),cleanChat,uid:()=>MYUID,price,set:(k,v)=>{ if(k==='coins') coins=v; if(k==='wallInv') wallInv=v; }});
 })();
 </script>
 </body>
